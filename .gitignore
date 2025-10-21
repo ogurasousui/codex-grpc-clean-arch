@@ -1,0 +1,17 @@
+# Build artefacts
+bin/
+build/
+dist/
+
+# Go cache directories
+.gocache/
+.bufcache/
+
+# Dependencies (optional vendoring)
+vendor/
+
+# IDE & editor files
+.idea/
+.vscode/
+*.swp
+*.swo
