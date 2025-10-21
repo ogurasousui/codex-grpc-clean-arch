@@ -1,0 +1,4 @@
+version: v1
+name: buf.build/ogurasousui/codex-grpc-clean-arch
+deps:
+  - buf.build/google/protobuf

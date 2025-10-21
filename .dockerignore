@@ -1,0 +1,10 @@
+bin/
+build/
+dist/
+vendor/
+*.log
+.git
+.gitignore
+docs/
+README.md
+AGENTS.md

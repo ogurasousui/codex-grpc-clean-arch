@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package greeter.v1;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/ogurasousui/codex-grpc-clean-arch/internal/adapters/grpc/gen/greeter/v1;greeterpb";
+
+message SimpleResponse {
+  string message = 1;
+}
+
+service GreeterService {
+  rpc SayHello(google.protobuf.Empty) returns (SimpleResponse);
+}
