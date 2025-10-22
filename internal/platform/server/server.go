@@ -7,8 +7,10 @@ import (
 	"net"
 
 	greeterpb "github.com/ogurasousui/codex-grpc-clean-arch/internal/adapters/grpc/gen/greeter/v1"
+	userpb "github.com/ogurasousui/codex-grpc-clean-arch/internal/adapters/grpc/gen/user/v1"
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/adapters/grpc/handler"
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/hello"
+	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/user"
 	"google.golang.org/grpc"
 )
 
@@ -19,10 +21,12 @@ type Server struct {
 }
 
 // New は指定されたアドレスで待ち受ける gRPC サーバーを構築します。
-func New(listenAddr string, greeter hello.Greeter, opts ...grpc.ServerOption) *Server {
+func New(listenAddr string, greeter hello.Greeter, userSvc user.UseCase, opts ...grpc.ServerOption) *Server {
 	srv := grpc.NewServer(opts...)
 	greeterHandler := handler.NewGreeterHandler(greeter)
 	greeterpb.RegisterGreeterServiceServer(srv, greeterHandler)
+	userHandler := handler.NewUserGrpcHandler(userSvc)
+	userpb.RegisterUserServiceServer(srv, userHandler)
 
 	return &Server{
 		listenAddr: listenAddr,

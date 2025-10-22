@@ -1,0 +1,14 @@
+server:
+  listen_addr: ":50051"
+
+database:
+  host: "localhost"
+  port: 5432
+  user: "app_user"
+  password: "app_password"
+  name: "app_db"
+  ssl_mode: "disable"
+  max_open_conns: 10
+  max_idle_conns: 5
+  conn_max_lifetime: "30m"
+  conn_max_idle_time: "10m"

@@ -1,10 +1,10 @@
 version: v1
 plugins:
   - plugin: go
-    out: ../internal/adapters/grpc/gen/greeter/v1
+    out: ../internal/adapters/grpc/gen
     opt:
       - paths=source_relative
   - plugin: go-grpc
-    out: ../internal/adapters/grpc/gen/greeter/v1
+    out: ../internal/adapters/grpc/gen
     opt:
       - paths=source_relative
