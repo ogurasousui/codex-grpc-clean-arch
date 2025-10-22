@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -48,7 +49,13 @@ func effectiveConfigPath(flagValue string) string {
 }
 
 func runMigration(action, dir, dsn string) error {
-	m, err := migrate.New(fmt.Sprintf("file://%s", dir), dsn)
+	absDir, err := filepath.Abs(dir)
+	if err != nil {
+		return fmt.Errorf("resolve path for %s: %w", dir, err)
+	}
+	absDir = filepath.ToSlash(absDir)
+
+	m, err := migrate.New(fmt.Sprintf("file://%s", absDir), dsn)
 	if err != nil {
 		return fmt.Errorf("create migrate instance: %w", err)
 	}
