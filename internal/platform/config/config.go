@@ -2,7 +2,9 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -115,5 +117,21 @@ func parseDurationAllowEmpty(raw string) (time.Duration, error) {
 
 // DSN は pgx 用の接続文字列を返します。
 func (d DatabaseConfig) DSN() string {
-	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s", d.User, d.Password, d.Host, d.Port, d.Name, d.SSLMode)
+	u := &url.URL{
+		Scheme: "postgres",
+		Host:   fmt.Sprintf("%s:%d", d.Host, d.Port),
+		Path:   "/" + strings.TrimPrefix(d.Name, "/"),
+	}
+
+	if d.User != "" || d.Password != "" {
+		u.User = url.UserPassword(d.User, d.Password)
+	}
+
+	query := url.Values{}
+	if d.SSLMode != "" {
+		query.Set("sslmode", d.SSLMode)
+	}
+	u.RawQuery = query.Encode()
+
+	return u.String()
 }
