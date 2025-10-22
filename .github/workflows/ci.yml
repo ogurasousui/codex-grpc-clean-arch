@@ -9,6 +9,20 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        ports:
+          - "5432:5432"
+        env:
+          POSTGRES_USER: app_user
+          POSTGRES_PASSWORD: app_password
+          POSTGRES_DB: app_db
+        options: >-
+          --health-cmd "pg_isready -U app_user -d app_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout
@@ -24,3 +38,13 @@ jobs:
 
       - name: Run unit tests
         run: go test ./...
+
+      - name: Run migrations
+        env:
+          CONFIG_PATH: assets/ci.yaml
+        run: go run ./cmd/migrate -config ${CONFIG_PATH} up
+
+      - name: Run integration tests
+        env:
+          CONFIG_PATH: assets/ci.yaml
+        run: go test -tags=integration ./test/...

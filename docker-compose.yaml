@@ -9,3 +9,24 @@ services:
       - "50051:50051"
     environment:
       - GO111MODULE=on
+      - CONFIG_PATH=assets/local.yaml
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: app_password
+      POSTGRES_DB: app_db
+    ports:
+      - "15432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+volumes:
+  postgres-data:

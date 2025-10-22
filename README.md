@@ -3,10 +3,14 @@
 Go 言語と Clean Architecture を採用した gRPC サーバーのテンプレートです。プロジェクト全体で責務を分離し、疎結合なユースケースとアダプタを構築するためのガイドラインとサンプル構成を提供します。
 
 ## Quick Start
-- **Prerequisites**: Go 1.22+, Buf CLI または Docker, protoc, `make` (任意)、Docker。
-- **依存関係の初期化**: `go mod init github.com/ogurasousui/codex-grpc-clean-arch` を実行し、必要なライブラリ (`google.golang.org/grpc` など) を `go get` で追加します。
-- **プロトコル定義の検証/生成**: `docker run --rm -v $PWD:/workspace -w /workspace bufbuild/buf lint` / `... generate` を利用するとローカルに Buf をインストールせずに済みます。`buf.yaml` と `buf.gen.yaml` は `proto/` 直下に配置してください。
-- **ローカル動作確認**: `docker compose up server` で gRPC サーバーを起動します（Go 1.24 ベースの `golang:1.24-bullseye` イメージを使用）。テストは `docker compose run --rm server go test ./...` で実行できます。直接実行する場合は `CONFIG_PATH=assets/local.yaml go run ./cmd/server` を利用します。
+- **Prerequisites**: Go 1.22+, Buf CLI（または `bufbuild/buf` Docker イメージ）、Docker & Docker Compose、`golang-migrate`（マイグレーション実行用に推奨）。
+- **依存関係の同期**: `go mod tidy` を実行し、プロジェクトで利用するライブラリ（`pgx`, `yaml`, `testify` など）を取得します。
+- **プロトコル定義の検証/生成**: `cd proto && buf lint` / `buf generate` を実行します。Docker を使う場合は `docker run --rm -v $PWD:/workspace -w /workspace bufbuild/buf generate` のように呼び出します。
+- **PostgreSQL の起動**: `docker compose up -d postgres` で開発用 DB を立ち上げます。
+- **マイグレーション**: `go run ./cmd/migrate up` で `assets/migrations` を適用できます（`down`, `drop`, `version` もサポート）。外部ツール `golang-migrate` を使う場合は同ディレクトリを参照してください。
+- **シードデータ**: 統合テスト等で初期データが必要な場合は `go run ./cmd/migrate -dir assets/seeds up` を実行します（`down` で巻き戻し可能）。
+- **サーバーの起動**: `CONFIG_PATH=assets/local.yaml go run ./cmd/server` もしくは `docker compose up server` で gRPC サーバーを起動します。
+- **テスト実行**: `go test ./...` または `docker compose run --rm server go test ./...` でユニットテストを実行します。PostgreSQL を使用する統合テストは `CONFIG_PATH=assets/local.yaml go test -tags=integration ./test/...` で実行します。
 
 ## Project Layout
 ```
