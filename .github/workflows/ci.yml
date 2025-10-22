@@ -41,10 +41,10 @@ jobs:
 
       - name: Run migrations
         env:
-          CONFIG_PATH: assets/ci.yaml
+          CONFIG_PATH: "${{ github.workspace }}/assets/ci.yaml"
         run: go run ./cmd/migrate -config ${CONFIG_PATH} up
 
       - name: Run integration tests
         env:
-          CONFIG_PATH: assets/ci.yaml
+          CONFIG_PATH: "${{ github.workspace }}/assets/ci.yaml"
         run: go test -tags=integration ./test/...

@@ -53,9 +53,8 @@ func runMigration(action, dir, dsn string) error {
 	if err != nil {
 		return fmt.Errorf("resolve path for %s: %w", dir, err)
 	}
-	absDir = filepath.ToSlash(absDir)
 
-	m, err := migrate.New(fmt.Sprintf("file://%s", absDir), dsn)
+	m, err := migrate.New(fmt.Sprintf("file://%s", filepath.ToSlash(absDir)), dsn)
 	if err != nil {
 		return fmt.Errorf("create migrate instance: %w", err)
 	}

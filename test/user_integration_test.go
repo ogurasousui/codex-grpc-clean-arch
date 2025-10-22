@@ -7,6 +7,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -24,29 +25,29 @@ const (
 	seedsDir      = "assets/seeds"
 )
 
+var projectRoot = func() string {
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		panic("failed to determine project root")
+	}
+	return filepath.Clean(filepath.Join(filepath.Dir(file), ".."))
+}()
+
 func TestUserCRUDIntegration(t *testing.T) {
 	t.Parallel()
 
-	cfgPath := configPathFromEnv()
-	absCfgPath, err := filepath.Abs(cfgPath)
-	if err != nil {
-		t.Fatalf("failed to resolve config path: %v", err)
-	}
+	cfgPath := resolvePath(configPathFromEnv())
 
-	cfg, err := config.Load(absCfgPath)
+	cfg, err := config.Load(cfgPath)
 	if err != nil {
 		t.Fatalf("failed to load config: %v", err)
 	}
 
-	projectRoot := filepath.Dir(filepath.Dir(absCfgPath))
-	absMigrationsDir := filepath.Join(projectRoot, migrationsDir)
-	absSeedsDir := filepath.Join(projectRoot, seedsDir)
-
-	if err := resetMigrations(cfg.Database.DSN(), absMigrationsDir); err != nil {
+	if err := resetMigrations(cfg.Database.DSN(), resolvePath(migrationsDir)); err != nil {
 		t.Fatalf("failed to migrate database: %v", err)
 	}
 
-	if err := applySeeds(cfg.Database.DSN(), absSeedsDir); err != nil {
+	if err := applySeeds(cfg.Database.DSN(), resolvePath(seedsDir)); err != nil {
 		t.Fatalf("failed to apply seeds: %v", err)
 	}
 
@@ -93,12 +94,7 @@ func TestUserCRUDIntegration(t *testing.T) {
 }
 
 func resetMigrations(dsn, dir string) error {
-	absDir, err := filepath.Abs(dir)
-	if err != nil {
-		return err
-	}
-
-	m, err := migrate.New("file://"+filepath.ToSlash(absDir), dsn)
+	m, err := migrate.New("file://"+filepath.ToSlash(dir), dsn)
 	if err != nil {
 		return err
 	}
@@ -118,12 +114,7 @@ func applySeeds(dsn, dir string) error {
 		return nil
 	}
 
-	absDir, err := filepath.Abs(dir)
-	if err != nil {
-		return err
-	}
-
-	m, err := migrate.New("file://"+filepath.ToSlash(absDir), dsn)
+	m, err := migrate.New("file://"+filepath.ToSlash(dir), dsn)
 	if err != nil {
 		return err
 	}
@@ -140,6 +131,13 @@ func configPathFromEnv() string {
 		return v
 	}
 	return "assets/local.yaml"
+}
+
+func resolvePath(p string) string {
+	if filepath.IsAbs(p) {
+		return p
+	}
+	return filepath.Join(projectRoot, p)
 }
 
 type stubClock struct {
