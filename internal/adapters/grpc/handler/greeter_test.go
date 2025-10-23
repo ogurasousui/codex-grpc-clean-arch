@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	greeterpb "github.com/ogurasousui/codex-grpc-clean-arch/internal/adapters/grpc/gen/greeter/v1"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 type stubGreeter struct{}
@@ -19,7 +18,7 @@ func TestGreeterHandler_SayHello(t *testing.T) {
 
 	handler := NewGreeterHandler(stubGreeter{})
 
-	resp, err := handler.SayHello(context.Background(), &emptypb.Empty{})
+	resp, err := handler.SayHello(context.Background(), &greeterpb.SayHelloRequest{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -28,7 +27,7 @@ func TestGreeterHandler_SayHello(t *testing.T) {
 		t.Fatalf("expected empty message, got %q", resp.Message)
 	}
 
-	if _, ok := interface{}(resp).(*greeterpb.SimpleResponse); !ok {
-		t.Fatalf("response should be greeterpb.SimpleResponse")
+	if _, ok := interface{}(resp).(*greeterpb.SayHelloResponse); !ok {
+		t.Fatalf("response should be greeterpb.SayHelloResponse")
 	}
 }

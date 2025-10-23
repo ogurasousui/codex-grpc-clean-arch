@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/mail"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -20,6 +21,11 @@ func (realClock) Now() time.Time {
 	return time.Now().UTC()
 }
 
+const (
+	defaultListPageSize = 50
+	maxListPageSize     = 200
+)
+
 // Service はユーザーに関するユースケースをまとめます。
 type Service struct {
 	repo  Repository
@@ -31,6 +37,8 @@ type UseCase interface {
 	CreateUser(ctx context.Context, in CreateUserInput) (*User, error)
 	UpdateUser(ctx context.Context, in UpdateUserInput) (*User, error)
 	DeleteUser(ctx context.Context, in DeleteUserInput) error
+	GetUser(ctx context.Context, in GetUserInput) (*User, error)
+	ListUsers(ctx context.Context, in ListUsersInput) (*ListUsersResult, error)
 }
 
 // NewService は Service を生成します。
@@ -57,6 +65,24 @@ type UpdateUserInput struct {
 // DeleteUserInput はユーザー削除時の入力です。
 type DeleteUserInput struct {
 	ID string
+}
+
+// GetUserInput はユーザー取得時の入力です。
+type GetUserInput struct {
+	ID string
+}
+
+// ListUsersInput は一覧取得時の入力です。
+type ListUsersInput struct {
+	PageSize  int
+	PageToken string
+	Status    *Status
+}
+
+// ListUsersResult は一覧取得結果を表します。
+type ListUsersResult struct {
+	Users         []*User
+	NextPageToken string
 }
 
 // CreateUser は新しいユーザーを作成します。
@@ -136,6 +162,50 @@ func (s *Service) DeleteUser(ctx context.Context, in DeleteUserInput) error {
 	return s.repo.Delete(ctx, in.ID)
 }
 
+// GetUser は ID でユーザーを取得します。
+func (s *Service) GetUser(ctx context.Context, in GetUserInput) (*User, error) {
+	if strings.TrimSpace(in.ID) == "" {
+		return nil, fmt.Errorf("id: %w", ErrInvalidID)
+	}
+	return s.repo.FindByID(ctx, in.ID)
+}
+
+// ListUsers はユーザーの一覧を取得します。
+func (s *Service) ListUsers(ctx context.Context, in ListUsersInput) (*ListUsersResult, error) {
+	limit, err := normalizePageSize(in.PageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	offset, err := parsePageToken(in.PageToken)
+	if err != nil {
+		return nil, err
+	}
+
+	var statusPtr *Status
+	if in.Status != nil {
+		if !isValidStatus(*in.Status) {
+			return nil, ErrInvalidStatus
+		}
+		status := *in.Status
+		statusPtr = &status
+	}
+
+	users, nextToken, err := s.repo.List(ctx, ListUsersFilter{
+		Limit:  limit,
+		Offset: offset,
+		Status: statusPtr,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &ListUsersResult{
+		Users:         users,
+		NextPageToken: nextToken,
+	}, nil
+}
+
 func (s *Service) ensureEmailNotExists(ctx context.Context, email string) error {
 	user, err := s.repo.FindByEmail(ctx, email)
 	if err != nil && !errors.Is(err, ErrUserNotFound) {
@@ -168,4 +238,27 @@ func isValidStatus(status Status) bool {
 	default:
 		return false
 	}
+}
+
+func normalizePageSize(pageSize int) (int, error) {
+	if pageSize <= 0 {
+		return defaultListPageSize, nil
+	}
+	if pageSize > maxListPageSize {
+		return 0, ErrInvalidPageSize
+	}
+	return pageSize, nil
+}
+
+func parsePageToken(token string) (int, error) {
+	if strings.TrimSpace(token) == "" {
+		return 0, nil
+	}
+
+	offset, err := strconv.Atoi(token)
+	if err != nil || offset < 0 {
+		return 0, ErrInvalidPageToken
+	}
+
+	return offset, nil
 }

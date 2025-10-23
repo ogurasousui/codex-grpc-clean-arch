@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"testing"
 	"time"
@@ -18,6 +19,7 @@ func (s stubClock) Now() time.Time {
 
 type fakeRepo struct {
 	users map[string]*User
+	order []string
 	seq   int
 }
 
@@ -36,6 +38,7 @@ func (r *fakeRepo) Create(_ context.Context, user *User) (*User, error) {
 	copy := *user
 	copy.ID = id
 	r.users[id] = &copy
+	r.order = append(r.order, id)
 	return cloneUser(&copy), nil
 }
 
@@ -53,6 +56,12 @@ func (r *fakeRepo) Delete(_ context.Context, id string) error {
 		return ErrUserNotFound
 	}
 	delete(r.users, id)
+	for i, existingID := range r.order {
+		if existingID == id {
+			r.order = append(r.order[:i], r.order[i+1:]...)
+			break
+		}
+	}
 	return nil
 }
 
@@ -71,6 +80,35 @@ func (r *fakeRepo) FindByEmail(_ context.Context, email string) (*User, error) {
 		}
 	}
 	return nil, ErrUserNotFound
+}
+
+func (r *fakeRepo) List(_ context.Context, filter ListUsersFilter) ([]*User, string, error) {
+	var filtered []*User
+	for _, id := range r.order {
+		u := r.users[id]
+		if filter.Status != nil && u.Status != *filter.Status {
+			continue
+		}
+		filtered = append(filtered, cloneUser(u))
+	}
+
+	if filter.Offset > len(filtered) {
+		return []*User{}, "", nil
+	}
+
+	end := filter.Offset + filter.Limit
+	if end > len(filtered) {
+		end = len(filtered)
+	}
+
+	page := filtered[filter.Offset:end]
+
+	var nextToken string
+	if end < len(filtered) {
+		nextToken = strconv.Itoa(end)
+	}
+
+	return page, nextToken, nil
 }
 
 func cloneUser(u *User) *User {
@@ -192,5 +230,129 @@ func TestService_DeleteUser_InvalidID(t *testing.T) {
 	err := svc.DeleteUser(context.Background(), DeleteUserInput{ID: ""})
 	if !errors.Is(err, ErrInvalidID) {
 		t.Fatalf("expected ErrInvalidID, got %v", err)
+	}
+}
+
+func TestService_GetUser_Success(t *testing.T) {
+	t.Parallel()
+
+	repo := newFakeRepo()
+	clk := stubClock{now: time.Now()}
+	svc := NewService(repo, &clk)
+
+	created, err := svc.CreateUser(context.Background(), CreateUserInput{Email: "user@example.com", Name: "User"})
+	if err != nil {
+		t.Fatalf("CreateUser error: %v", err)
+	}
+
+	found, err := svc.GetUser(context.Background(), GetUserInput{ID: created.ID})
+	if err != nil {
+		t.Fatalf("GetUser returned error: %v", err)
+	}
+
+	if found.ID != created.ID {
+		t.Fatalf("expected ID %s, got %s", created.ID, found.ID)
+	}
+}
+
+func TestService_GetUser_InvalidID(t *testing.T) {
+	t.Parallel()
+
+	repo := newFakeRepo()
+	clk := stubClock{now: time.Now()}
+	svc := NewService(repo, &clk)
+
+	if _, err := svc.GetUser(context.Background(), GetUserInput{ID: "   "}); !errors.Is(err, ErrInvalidID) {
+		t.Fatalf("expected ErrInvalidID, got %v", err)
+	}
+}
+
+func TestService_ListUsers_Defaults(t *testing.T) {
+	t.Parallel()
+
+	repo := newFakeRepo()
+	clk := stubClock{now: time.Now()}
+	svc := NewService(repo, &clk)
+
+	for i := 0; i < 3; i++ {
+		name := fmt.Sprintf("User %d", i)
+		email := fmt.Sprintf("user%d@example.com", i)
+		if _, err := svc.CreateUser(context.Background(), CreateUserInput{Email: email, Name: name}); err != nil {
+			t.Fatalf("CreateUser error: %v", err)
+		}
+	}
+
+	result, err := svc.ListUsers(context.Background(), ListUsersInput{})
+	if err != nil {
+		t.Fatalf("ListUsers returned error: %v", err)
+	}
+
+	if len(result.Users) != 3 {
+		t.Fatalf("expected 3 users, got %d", len(result.Users))
+	}
+
+	if result.NextPageToken != "" {
+		t.Fatalf("expected no next token, got %s", result.NextPageToken)
+	}
+}
+
+func TestService_ListUsers_PageSizeValidation(t *testing.T) {
+	t.Parallel()
+
+	repo := newFakeRepo()
+	clk := stubClock{now: time.Now()}
+	svc := NewService(repo, &clk)
+
+	_, err := svc.ListUsers(context.Background(), ListUsersInput{PageSize: maxListPageSize + 1})
+	if !errors.Is(err, ErrInvalidPageSize) {
+		t.Fatalf("expected ErrInvalidPageSize, got %v", err)
+	}
+}
+
+func TestService_ListUsers_PageTokenValidation(t *testing.T) {
+	t.Parallel()
+
+	repo := newFakeRepo()
+	clk := stubClock{now: time.Now()}
+	svc := NewService(repo, &clk)
+
+	_, err := svc.ListUsers(context.Background(), ListUsersInput{PageToken: "abc"})
+	if !errors.Is(err, ErrInvalidPageToken) {
+		t.Fatalf("expected ErrInvalidPageToken, got %v", err)
+	}
+}
+
+func TestService_ListUsers_FilterByStatus(t *testing.T) {
+	t.Parallel()
+
+	repo := newFakeRepo()
+	clk := stubClock{now: time.Now()}
+	svc := NewService(repo, &clk)
+
+	if _, err := svc.CreateUser(context.Background(), CreateUserInput{Email: "active@example.com", Name: "Active"}); err != nil {
+		t.Fatalf("CreateUser error: %v", err)
+	}
+
+	created, err := svc.CreateUser(context.Background(), CreateUserInput{Email: "inactive@example.com", Name: "Inactive"})
+	if err != nil {
+		t.Fatalf("CreateUser error: %v", err)
+	}
+
+	inactive := StatusInactive
+	if _, err := svc.UpdateUser(context.Background(), UpdateUserInput{ID: created.ID, Status: &inactive}); err != nil {
+		t.Fatalf("UpdateUser error: %v", err)
+	}
+
+	result, err := svc.ListUsers(context.Background(), ListUsersInput{Status: &inactive})
+	if err != nil {
+		t.Fatalf("ListUsers returned error: %v", err)
+	}
+
+	if len(result.Users) != 1 {
+		t.Fatalf("expected 1 user, got %d", len(result.Users))
+	}
+
+	if result.Users[0].Status != StatusInactive {
+		t.Fatalf("expected inactive status, got %s", result.Users[0].Status)
 	}
 }

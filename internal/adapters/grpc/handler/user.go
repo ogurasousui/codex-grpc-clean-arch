@@ -8,7 +8,6 @@ import (
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/user"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -74,7 +73,7 @@ func (h *UserGrpcHandler) UpdateUser(ctx context.Context, req *userpb.UpdateUser
 }
 
 // DeleteUser はユーザーを削除します。
-func (h *UserGrpcHandler) DeleteUser(ctx context.Context, req *userpb.DeleteUserRequest) (*emptypb.Empty, error) {
+func (h *UserGrpcHandler) DeleteUser(ctx context.Context, req *userpb.DeleteUserRequest) (*userpb.DeleteUserResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request is required")
 	}
@@ -83,12 +82,61 @@ func (h *UserGrpcHandler) DeleteUser(ctx context.Context, req *userpb.DeleteUser
 		return nil, toStatusError(err)
 	}
 
-	return &emptypb.Empty{}, nil
+	return &userpb.DeleteUserResponse{}, nil
+}
+
+// GetUser はユーザーを取得します。
+func (h *UserGrpcHandler) GetUser(ctx context.Context, req *userpb.GetUserRequest) (*userpb.GetUserResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request is required")
+	}
+
+	found, err := h.svc.GetUser(ctx, user.GetUserInput{ID: req.GetId()})
+	if err != nil {
+		return nil, toStatusError(err)
+	}
+
+	return &userpb.GetUserResponse{User: toProtoUser(found)}, nil
+}
+
+// ListUsers はユーザーの一覧を取得します。
+func (h *UserGrpcHandler) ListUsers(ctx context.Context, req *userpb.ListUsersRequest) (*userpb.ListUsersResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request is required")
+	}
+
+	var statusPtr *user.Status
+	if req.GetStatus() != userpb.UserStatus_USER_STATUS_UNSPECIFIED {
+		domainStatus, err := toDomainStatus(req.GetStatus())
+		if err != nil {
+			return nil, toStatusError(err)
+		}
+		statusPtr = &domainStatus
+	}
+
+	result, err := h.svc.ListUsers(ctx, user.ListUsersInput{
+		PageSize:  int(req.GetPageSize()),
+		PageToken: req.GetPageToken(),
+		Status:    statusPtr,
+	})
+	if err != nil {
+		return nil, toStatusError(err)
+	}
+
+	protoUsers := make([]*userpb.User, 0, len(result.Users))
+	for _, u := range result.Users {
+		protoUsers = append(protoUsers, toProtoUser(u))
+	}
+
+	return &userpb.ListUsersResponse{
+		Users:         protoUsers,
+		NextPageToken: result.NextPageToken,
+	}, nil
 }
 
 func toStatusError(err error) error {
 	switch {
-	case errors.Is(err, user.ErrInvalidEmail), errors.Is(err, user.ErrInvalidName), errors.Is(err, user.ErrInvalidStatus), errors.Is(err, user.ErrInvalidID):
+	case errors.Is(err, user.ErrInvalidEmail), errors.Is(err, user.ErrInvalidName), errors.Is(err, user.ErrInvalidStatus), errors.Is(err, user.ErrInvalidID), errors.Is(err, user.ErrInvalidPageSize), errors.Is(err, user.ErrInvalidPageToken):
 		return status.Error(codes.InvalidArgument, err.Error())
 	case errors.Is(err, user.ErrEmailAlreadyExists):
 		return status.Error(codes.AlreadyExists, err.Error())
