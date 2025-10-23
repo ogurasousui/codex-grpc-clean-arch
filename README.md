@@ -4,7 +4,7 @@ Go 言語と Clean Architecture を採用した gRPC サーバーのテンプレ
 
 ## Quick Start
 - ローカル環境でのより詳細な手順は `docs/workflow/local-setup.md` を参照してください。
-- **Prerequisites**: Go 1.22+, Buf CLI（または `bufbuild/buf` Docker イメージ）、Docker & Docker Compose、`golang-migrate`（マイグレーション実行用に推奨）。
+- **Prerequisites**: Go 1.25.3 以上、Buf CLI（または `bufbuild/buf` Docker イメージ）、Docker & Docker Compose、`golang-migrate`（マイグレーション実行用に推奨）。
 - **依存関係の同期**: `go mod tidy` を実行し、プロジェクトで利用するライブラリ（`pgx`, `yaml`, `testify` など）を取得します。
 - **プロトコル定義の検証/生成**: `cd proto && buf lint` / `buf generate` を実行します。Docker を使う場合は `docker run --rm -v $PWD:/workspace -w /workspace bufbuild/buf generate` のように呼び出します。
 - **PostgreSQL の起動**: `docker compose --profile local up -d postgres` で開発用 DB を立ち上げます。
