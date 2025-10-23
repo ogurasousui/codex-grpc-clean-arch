@@ -10,29 +10,25 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/user"
+	pgdb "github.com/ogurasousui/codex-grpc-clean-arch/internal/platform/db/postgres"
 )
 
 const uniqueViolationCode = "23505"
 
-type pgxPool interface {
-	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
-	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
-	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
-}
-
 // UserRepository は PostgreSQL を利用したユーザー永続化の実装です。
 type UserRepository struct {
-	pool pgxPool
+	pool pgdb.Queryer
 }
 
 // NewUserRepository は UserRepository を生成します。
-func NewUserRepository(pool pgxPool) *UserRepository {
+func NewUserRepository(pool pgdb.Queryer) *UserRepository {
 	return &UserRepository{pool: pool}
 }
 
 // Create はユーザーを新規作成します。
 func (r *UserRepository) Create(ctx context.Context, u *user.User) (*user.User, error) {
-	row := r.pool.QueryRow(ctx, `
+	exec := pgdb.QueryerFromContext(ctx, r.pool)
+	row := exec.QueryRow(ctx, `
         INSERT INTO users (email, name, status, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5)
         RETURNING id, email, name, status, created_at, updated_at
@@ -47,7 +43,8 @@ func (r *UserRepository) Create(ctx context.Context, u *user.User) (*user.User, 
 
 // Update はユーザー情報を更新します。
 func (r *UserRepository) Update(ctx context.Context, u *user.User) (*user.User, error) {
-	row := r.pool.QueryRow(ctx, `
+	exec := pgdb.QueryerFromContext(ctx, r.pool)
+	row := exec.QueryRow(ctx, `
         UPDATE users
            SET name = $1,
                status = $2,
@@ -65,7 +62,8 @@ func (r *UserRepository) Update(ctx context.Context, u *user.User) (*user.User, 
 
 // Delete はユーザーを削除します。
 func (r *UserRepository) Delete(ctx context.Context, id string) error {
-	tag, err := r.pool.Exec(ctx, `DELETE FROM users WHERE id = $1`, id)
+	exec := pgdb.QueryerFromContext(ctx, r.pool)
+	tag, err := exec.Exec(ctx, `DELETE FROM users WHERE id = $1`, id)
 	if err != nil {
 		return translatePgError(err)
 	}
@@ -77,7 +75,8 @@ func (r *UserRepository) Delete(ctx context.Context, id string) error {
 
 // FindByID はIDでユーザーを取得します。
 func (r *UserRepository) FindByID(ctx context.Context, id string) (*user.User, error) {
-	row := r.pool.QueryRow(ctx, `
+	exec := pgdb.QueryerFromContext(ctx, r.pool)
+	row := exec.QueryRow(ctx, `
         SELECT id, email, name, status, created_at, updated_at
           FROM users
          WHERE id = $1
@@ -93,7 +92,8 @@ func (r *UserRepository) FindByID(ctx context.Context, id string) (*user.User, e
 
 // FindByEmail はメールアドレスでユーザーを取得します。
 func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*user.User, error) {
-	row := r.pool.QueryRow(ctx, `
+	exec := pgdb.QueryerFromContext(ctx, r.pool)
+	row := exec.QueryRow(ctx, `
         SELECT id, email, name, status, created_at, updated_at
           FROM users
          WHERE email = $1
@@ -145,7 +145,8 @@ func (r *UserRepository) List(ctx context.Context, filter user.ListUsersFilter) 
         OFFSET ` + offsetPlaceholder + `
     `
 
-	rows, err := r.pool.Query(ctx, query, args...)
+	exec := pgdb.QueryerFromContext(ctx, r.pool)
+	rows, err := exec.Query(ctx, query, args...)
 	if err != nil {
 		return nil, "", translatePgError(err)
 	}

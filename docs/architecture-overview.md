@@ -9,8 +9,8 @@
 - **Framework & Drivers (`internal/platform`, `cmd/server`)**: 設定ロード、ロギング、依存性注入、アプリケーション起動。`internal/platform/server` で gRPC サーバーを組み立て、`cmd/server` で設定読み込み・DB 初期化・ユースケース注入を行います。
 
 ## gRPC Flow
-1. gRPC サービス実装がリクエストを受け取り、DTO からユースケース入力モデルへ変換します。
-2. ユースケースがバリデーションとビジネスルールを実行し、出力ポート (リポジトリなど) を介して永続化・外部連携を行います。
+1. gRPC サービス実装がリクエストを受け取り、DTO からユースケース入力モデルへ変換します。読み取り系か更新系かに応じて、アプリケーションサービスに対して Read Only / Read Write のトランザクション実行を指示します。
+2. ユースケースがトランザクションマネージャ (`TransactionManager`) を介してビジネスルールを実行し、リポジトリへアクセスします。ユースケース内部では `WithinReadOnly`/`WithinReadWrite` を呼び分けてトランザクション境界を明示します。
 3. 結果を DTO に戻し、レスポンスを生成します。エラーはドメインエラーとインフラエラーに分類し、`status.Status` へ適切に変換します。
 
 ## Configuration & Environment
