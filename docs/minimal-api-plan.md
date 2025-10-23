@@ -20,7 +20,7 @@
 
 ## 4. エントリーポイントと動作確認
 - `cmd/server/main.go` で設定読込（暫定でハードコードでも可）と gRPC サーバー起動処理を記述。
-- ローカル検証は Docker Compose を用い、`docker compose up server` で gRPC サーバーを起動する。イメージは Go 1.24 系 (`golang:1.24-bullseye`) を利用する。
+- ローカル検証は Docker Compose を用い、`docker compose up server` で gRPC サーバーを起動する。イメージは Go 1.25.3 系 (`golang:1.25.3-bookworm`) を利用する。
 - `docker compose run --rm server go test ./...` を実行し、コンテナ上でユニットテストが通ることを確認。
 
 ## 5. API ドキュメント整備

@@ -6,14 +6,14 @@
 - チームの運用ドキュメントにホットリロード手順を追加し、既存の `docker compose` ベース運用と整合させる。
 
 ## 前提・制約
-- ベースイメージは現行の `golang:1.24-bullseye` を継続利用する（Alpine ベースへの乗り換えは今回は行わない）。
+- ベースイメージは現行の `golang:1.25.3-bookworm` を継続利用する（Alpine ベースへの乗り換えは今回は行わない）。
 - Air の導入はローカル開発プロファイル（`profiles: [local]`）限定とし、本番相当の実行経路には影響を与えない。
 - 既存の `CONFIG_PATH=assets/local-compose.yaml` を利用する構成を保ちつつ、サーバー起動コマンドのみ Air 経由に置き換える。
 
 ## 作業ステップ
 ### 1. 開発用 Dockerfile 整備
 - `docker/dev/server/Dockerfile`（新規）を作成し、以下を実装する。
-  - ベースに `golang:1.24-bullseye` を採用。
+  - ベースに `golang:1.25.3-bookworm` を採用。
   - `curl` / `git` など Air のインストールに必要なパッケージを `apt-get` で追加。
   - `go install github.com/air-verse/air@v1.52.3` など安定版バージョンを固定してインストール。
   - Go ビルドキャッシュ用に `/go/pkg/mod` と `/root/.cache/go-build` を明示的にボリュームマウント可能にしておく（`VOLUME` 宣言 or compose で対応）。
