@@ -2,7 +2,7 @@ CONFIG_PATH ?= assets/local.yaml
 SEED_DIR ?= assets/seeds
 MIGRATE := go run ./cmd/migrate -config $(CONFIG_PATH)
 
-.PHONY: test test-integration buf-lint buf-generate migrate-up migrate-down migrate-version migrate-drop migrate-seeds-up migrate-seeds-down docker-up docker-down fmt tidy ci
+.PHONY: test test-integration buf-lint buf-generate migrate-up migrate-down migrate-version migrate-drop migrate-seeds-up migrate-seeds-down docker-up docker-down dev-up dev-down fmt tidy ci
 
 ## Run unit tests
 test:
@@ -51,6 +51,14 @@ docker-up:
 ## Stop local Docker services
 docker-down:
 	docker compose down
+
+## Start development server with Air (foreground)
+dev-up:
+	docker compose --profile local up server
+
+## Stop development server and related containers
+dev-down:
+	docker compose --profile local down
 
 ## Format Go files
 fmt:

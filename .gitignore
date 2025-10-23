@@ -2,6 +2,7 @@
 bin/
 build/
 dist/
+tmp/
 
 # Go cache directories
 .gocache/

@@ -1,10 +1,14 @@
 services:
   server:
-    image: golang:1.24-bullseye
+    build:
+      context: .
+      dockerfile: docker/dev/server/Dockerfile
     working_dir: /workspace
     volumes:
       - ./:/workspace
-    command: go run ./cmd/server
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+    command: air -c .air.toml
     ports:
       - "50051:50051"
     environment:
@@ -34,3 +38,5 @@ services:
       - local
 volumes:
   postgres-data:
+  go-mod-cache:
+  go-build-cache:

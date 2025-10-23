@@ -10,7 +10,7 @@ Go 言語と Clean Architecture を採用した gRPC サーバーのテンプレ
 - **PostgreSQL の起動**: `docker compose --profile local up -d postgres` で開発用 DB を立ち上げます。
 - **マイグレーション**: `go run ./cmd/migrate up` で `assets/migrations` を適用できます（`down`, `drop`, `version` もサポート）。外部ツール `golang-migrate` を使う場合は同ディレクトリを参照してください。
 - **シードデータ**: 統合テスト等で初期データが必要な場合は `go run ./cmd/migrate -dir assets/seeds up` を実行します（`down` で巻き戻し可能）。
-- **サーバーの起動**: `CONFIG_PATH=assets/local.yaml go run ./cmd/server` もしくは `docker compose up server` で gRPC サーバーを起動します（Compose 側は内部ネットワーク接続のため `assets/local-compose.yaml` を参照しています）。API サーバーと PostgreSQL を同時に立ち上げたい場合は `docker compose --profile local up -d` を利用できます。
+- **サーバーの起動**: 初回は `docker compose --profile local build server` を実行して Air 同梱の開発用コンテナをビルドし、`make dev-up`（前面でログ表示）または `docker compose --profile local up server` でホットリロード付き gRPC サーバーを起動します。Air を使わず直接 Go を実行したい場合は `CONFIG_PATH=assets/local.yaml go run ./cmd/server` を利用してください。
 - **テスト実行**: `go test ./...` または `docker compose run --rm server go test ./...` でユニットテストを実行します。PostgreSQL を使用する統合テストは `CONFIG_PATH=assets/local.yaml go test -tags=integration ./test/...` で実行します。
 
 ## Project Layout

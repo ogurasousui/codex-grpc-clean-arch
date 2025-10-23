@@ -54,29 +54,27 @@ CONFIG_PATH=assets/local.yaml go run ./cmd/migrate version
 Makefile を利用する場合は `make migrate-up` や `make migrate-version` でも同様の操作が可能です。
 
 ### 4. gRPC サーバーの起動
-ローカルで Go を直接実行するか、Docker Compose の `server` サービスを利用できます。
+ローカルで Go を直接実行するか、Docker Compose + Air を利用したホットリロード運用を選べます。
 
 ```bash
-# Go を直接実行する場合（ホットリロード等を導入する場合もこちらが起点となります）
+# Go を直接実行する場合（Air を使わないシンプルな方法）
 CONFIG_PATH=assets/local.yaml go run ./cmd/server
 ```
 
-Docker Compose でサーバーを起動する場合は、別ターミナルで以下を実行してください。
+Air を利用したホットリロード手順は以下の通りです。初回は開発用イメージをビルドしてください。
 
 ```bash
-# PostgreSQL が起動済みであることを前提に、gRPC サーバーをコンテナとして起動
-docker compose up server
+# 1. 開発用コンテナのビルド（初回のみ）
+docker compose --profile local build server
+
+# 2. ホットリロード付きで起動（前面でログを確認する場合）
+make dev-up
+
+# 別ターミナルや停止時は以下で終了
+make dev-down
 ```
 
-プロフィールを利用して API サーバーと PostgreSQL を同時に立ち上げる場合は、以下のように実行します（`server` コンテナは自動的に `CONFIG_PATH=assets/local-compose.yaml` を参照します）。
-
-```bash
-# 背景で起動する場合
-docker compose --profile local up -d
-
-# フォアグラウンドでログを確認しながら起動する場合
-docker compose --profile local up
-```
+`make` を使わない場合は `docker compose --profile local up server` / `docker compose --profile local down` で同等の操作が可能です。Air は `cmd/`, `internal/`, `pkg/`, `proto/` 以下の Go ファイル更新を監視し、再ビルド後にサーバーを自動的に再起動します。PostgreSQL と同時に起動する場合は `docker compose --profile local up` を利用すると `server` と `postgres` の両方が立ち上がります。
 
 どの方法でもデフォルトでは `localhost:50051` で gRPC サーバーが待ち受けます。
 
