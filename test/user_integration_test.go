@@ -59,7 +59,7 @@ func TestUserCRUDIntegration(t *testing.T) {
 	t.Cleanup(func() { pool.Close() })
 
 	userRepo := repo.NewUserRepository(pool)
-	svc := user.NewService(userRepo, stubClock{now: time.Now().UTC()})
+	svc := user.NewService(userRepo, stubClock{now: time.Now().UTC()}, pg.NewTransactionManager(pool))
 
 	created, err := svc.CreateUser(ctx, user.CreateUserInput{Email: "integration@example.com", Name: "Integration"})
 	if err != nil {
@@ -90,6 +90,58 @@ func TestUserCRUDIntegration(t *testing.T) {
 
 	if _, err := userRepo.FindByID(ctx, created.ID); !errors.Is(err, user.ErrUserNotFound) {
 		t.Fatalf("expected ErrUserNotFound, got %v", err)
+	}
+}
+
+func TestUserCRUDIntegration_RollbackOnError(t *testing.T) {
+	t.Parallel()
+
+	cfgPath := resolvePath(configPathFromEnv())
+
+	cfg, err := config.Load(cfgPath)
+	if err != nil {
+		t.Fatalf("failed to load config: %v", err)
+	}
+
+	if err := resetMigrations(cfg.Database.DSN(), resolvePath(migrationsDir)); err != nil {
+		t.Fatalf("failed to migrate database: %v", err)
+	}
+
+	ctx := context.Background()
+	pool, err := pg.NewPool(ctx, cfg.Database)
+	if err != nil {
+		t.Fatalf("failed to create pool: %v", err)
+	}
+	t.Cleanup(func() { pool.Close() })
+
+	tm := pg.NewTransactionManager(pool)
+	userRepo := repo.NewUserRepository(pool)
+
+	forcedErr := errors.New("force rollback")
+	email := "rollback@example.com"
+
+	err = tm.WithinReadWrite(ctx, func(txCtx context.Context) error {
+		now := time.Now().UTC()
+		_, err := userRepo.Create(txCtx, &user.User{
+			Email:     email,
+			Name:      "Rollback",
+			Status:    user.StatusActive,
+			CreatedAt: now,
+			UpdatedAt: now,
+		})
+		if err != nil {
+			return err
+		}
+		return forcedErr
+	})
+
+	if !errors.Is(err, forcedErr) {
+		t.Fatalf("expected forced rollback error, got %v", err)
+	}
+
+	_, findErr := userRepo.FindByEmail(ctx, email)
+	if !errors.Is(findErr, user.ErrUserNotFound) {
+		t.Fatalf("expected user to be rolled back, got %v", findErr)
 	}
 }
 

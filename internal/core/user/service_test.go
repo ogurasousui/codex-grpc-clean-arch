@@ -124,7 +124,7 @@ func TestService_CreateUser_Success(t *testing.T) {
 
 	clk := stubClock{now: time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)}
 	repo := newFakeRepo()
-	svc := NewService(repo, &clk)
+	svc := NewService(repo, &clk, nil)
 
 	input := CreateUserInput{Email: " USER@example.com ", Name: "  John Doe  "}
 
@@ -155,7 +155,7 @@ func TestService_CreateUser_DuplicateEmail(t *testing.T) {
 
 	clk := stubClock{now: time.Now()}
 	repo := newFakeRepo()
-	svc := NewService(repo, &clk)
+	svc := NewService(repo, &clk, nil)
 
 	if _, err := svc.CreateUser(context.Background(), CreateUserInput{Email: "john@example.com", Name: "John"}); err != nil {
 		t.Fatalf("unexpected error preparing data: %v", err)
@@ -172,7 +172,7 @@ func TestService_UpdateUser_Success(t *testing.T) {
 
 	clk := stubClock{now: time.Now()}
 	repo := newFakeRepo()
-	svc := NewService(repo, &clk)
+	svc := NewService(repo, &clk, nil)
 
 	created, err := svc.CreateUser(context.Background(), CreateUserInput{Email: "user@example.com", Name: "User"})
 	if err != nil {
@@ -206,7 +206,7 @@ func TestService_UpdateUser_InvalidStatus(t *testing.T) {
 
 	clk := stubClock{now: time.Now()}
 	repo := newFakeRepo()
-	svc := NewService(repo, &clk)
+	svc := NewService(repo, &clk, nil)
 
 	created, err := svc.CreateUser(context.Background(), CreateUserInput{Email: "user@example.com", Name: "User"})
 	if err != nil {
@@ -225,7 +225,7 @@ func TestService_DeleteUser_InvalidID(t *testing.T) {
 
 	repo := newFakeRepo()
 	clk := stubClock{now: time.Now()}
-	svc := NewService(repo, &clk)
+	svc := NewService(repo, &clk, nil)
 
 	err := svc.DeleteUser(context.Background(), DeleteUserInput{ID: ""})
 	if !errors.Is(err, ErrInvalidID) {
@@ -238,7 +238,7 @@ func TestService_GetUser_Success(t *testing.T) {
 
 	repo := newFakeRepo()
 	clk := stubClock{now: time.Now()}
-	svc := NewService(repo, &clk)
+	svc := NewService(repo, &clk, nil)
 
 	created, err := svc.CreateUser(context.Background(), CreateUserInput{Email: "user@example.com", Name: "User"})
 	if err != nil {
@@ -260,7 +260,7 @@ func TestService_GetUser_InvalidID(t *testing.T) {
 
 	repo := newFakeRepo()
 	clk := stubClock{now: time.Now()}
-	svc := NewService(repo, &clk)
+	svc := NewService(repo, &clk, nil)
 
 	if _, err := svc.GetUser(context.Background(), GetUserInput{ID: "   "}); !errors.Is(err, ErrInvalidID) {
 		t.Fatalf("expected ErrInvalidID, got %v", err)
@@ -272,7 +272,7 @@ func TestService_ListUsers_Defaults(t *testing.T) {
 
 	repo := newFakeRepo()
 	clk := stubClock{now: time.Now()}
-	svc := NewService(repo, &clk)
+	svc := NewService(repo, &clk, nil)
 
 	for i := 0; i < 3; i++ {
 		name := fmt.Sprintf("User %d", i)
@@ -301,7 +301,7 @@ func TestService_ListUsers_PageSizeValidation(t *testing.T) {
 
 	repo := newFakeRepo()
 	clk := stubClock{now: time.Now()}
-	svc := NewService(repo, &clk)
+	svc := NewService(repo, &clk, nil)
 
 	_, err := svc.ListUsers(context.Background(), ListUsersInput{PageSize: maxListPageSize + 1})
 	if !errors.Is(err, ErrInvalidPageSize) {
@@ -314,7 +314,7 @@ func TestService_ListUsers_PageTokenValidation(t *testing.T) {
 
 	repo := newFakeRepo()
 	clk := stubClock{now: time.Now()}
-	svc := NewService(repo, &clk)
+	svc := NewService(repo, &clk, nil)
 
 	_, err := svc.ListUsers(context.Background(), ListUsersInput{PageToken: "abc"})
 	if !errors.Is(err, ErrInvalidPageToken) {
@@ -327,7 +327,7 @@ func TestService_ListUsers_FilterByStatus(t *testing.T) {
 
 	repo := newFakeRepo()
 	clk := stubClock{now: time.Now()}
-	svc := NewService(repo, &clk)
+	svc := NewService(repo, &clk, nil)
 
 	if _, err := svc.CreateUser(context.Background(), CreateUserInput{Email: "active@example.com", Name: "Active"}); err != nil {
 		t.Fatalf("CreateUser error: %v", err)

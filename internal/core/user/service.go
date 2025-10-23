@@ -21,6 +21,28 @@ func (realClock) Now() time.Time {
 	return time.Now().UTC()
 }
 
+// TransactionManager はトランザクション制御の抽象化です。
+type TransactionManager interface {
+	WithinReadOnly(ctx context.Context, fn func(context.Context) error) error
+	WithinReadWrite(ctx context.Context, fn func(context.Context) error) error
+}
+
+type noopTransactionManager struct{}
+
+func (noopTransactionManager) WithinReadOnly(ctx context.Context, fn func(context.Context) error) error {
+	if fn == nil {
+		return nil
+	}
+	return fn(ctx)
+}
+
+func (noopTransactionManager) WithinReadWrite(ctx context.Context, fn func(context.Context) error) error {
+	if fn == nil {
+		return nil
+	}
+	return fn(ctx)
+}
+
 const (
 	defaultListPageSize = 50
 	maxListPageSize     = 200
@@ -30,6 +52,7 @@ const (
 type Service struct {
 	repo  Repository
 	clock Clock
+	tx    TransactionManager
 }
 
 // UseCase はユーザーユースケースの公開インターフェースです。
@@ -42,11 +65,14 @@ type UseCase interface {
 }
 
 // NewService は Service を生成します。
-func NewService(repo Repository, clock Clock) *Service {
+func NewService(repo Repository, clock Clock, tx TransactionManager) *Service {
 	if clock == nil {
 		clock = realClock{}
 	}
-	return &Service{repo: repo, clock: clock}
+	if tx == nil {
+		tx = noopTransactionManager{}
+	}
+	return &Service{repo: repo, clock: clock, tx: tx}
 }
 
 // CreateUserInput はユーザー作成時の入力です。
@@ -97,21 +123,29 @@ func (s *Service) CreateUser(ctx context.Context, in CreateUserInput) (*User, er
 		return nil, ErrInvalidName
 	}
 
-	if err := s.ensureEmailNotExists(ctx, email); err != nil {
-		return nil, err
-	}
+	var created *User
+	if err := s.tx.WithinReadWrite(ctx, func(txCtx context.Context) error {
+		if err := s.ensureEmailNotExists(txCtx, email); err != nil {
+			return err
+		}
 
-	now := s.clock.Now()
-	u := &User{
-		Email:     email,
-		Name:      name,
-		Status:    StatusActive,
-		CreatedAt: now,
-		UpdatedAt: now,
-	}
+		now := s.clock.Now()
+		u := &User{
+			Email:     email,
+			Name:      name,
+			Status:    StatusActive,
+			CreatedAt: now,
+			UpdatedAt: now,
+		}
 
-	created, err := s.repo.Create(ctx, u)
-	if err != nil {
+		result, err := s.repo.Create(txCtx, u)
+		if err != nil {
+			return err
+		}
+
+		created = result
+		return nil
+	}); err != nil {
 		return nil, err
 	}
 
@@ -124,30 +158,38 @@ func (s *Service) UpdateUser(ctx context.Context, in UpdateUserInput) (*User, er
 		return nil, fmt.Errorf("id: %w", ErrInvalidID)
 	}
 
-	existing, err := s.repo.FindByID(ctx, in.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	if in.Name != nil {
-		updatedName := strings.TrimSpace(*in.Name)
-		if updatedName == "" {
-			return nil, ErrInvalidName
+	var updated *User
+	if err := s.tx.WithinReadWrite(ctx, func(txCtx context.Context) error {
+		existing, err := s.repo.FindByID(txCtx, in.ID)
+		if err != nil {
+			return err
 		}
-		existing.Name = updatedName
-	}
 
-	if in.Status != nil {
-		if !isValidStatus(*in.Status) {
-			return nil, ErrInvalidStatus
+		if in.Name != nil {
+			updatedName := strings.TrimSpace(*in.Name)
+			if updatedName == "" {
+				return ErrInvalidName
+			}
+			existing.Name = updatedName
 		}
-		existing.Status = *in.Status
-	}
 
-	existing.UpdatedAt = s.clock.Now()
+		if in.Status != nil {
+			if !isValidStatus(*in.Status) {
+				return ErrInvalidStatus
+			}
+			existing.Status = *in.Status
+		}
 
-	updated, err := s.repo.Update(ctx, existing)
-	if err != nil {
+		existing.UpdatedAt = s.clock.Now()
+
+		result, err := s.repo.Update(txCtx, existing)
+		if err != nil {
+			return err
+		}
+
+		updated = result
+		return nil
+	}); err != nil {
 		return nil, err
 	}
 
@@ -159,7 +201,9 @@ func (s *Service) DeleteUser(ctx context.Context, in DeleteUserInput) error {
 	if strings.TrimSpace(in.ID) == "" {
 		return fmt.Errorf("id: %w", ErrInvalidID)
 	}
-	return s.repo.Delete(ctx, in.ID)
+	return s.tx.WithinReadWrite(ctx, func(txCtx context.Context) error {
+		return s.repo.Delete(txCtx, in.ID)
+	})
 }
 
 // GetUser は ID でユーザーを取得します。
@@ -167,7 +211,18 @@ func (s *Service) GetUser(ctx context.Context, in GetUserInput) (*User, error) {
 	if strings.TrimSpace(in.ID) == "" {
 		return nil, fmt.Errorf("id: %w", ErrInvalidID)
 	}
-	return s.repo.FindByID(ctx, in.ID)
+	var found *User
+	if err := s.tx.WithinReadOnly(ctx, func(txCtx context.Context) error {
+		result, err := s.repo.FindByID(txCtx, in.ID)
+		if err != nil {
+			return err
+		}
+		found = result
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return found, nil
 }
 
 // ListUsers はユーザーの一覧を取得します。
@@ -191,12 +246,24 @@ func (s *Service) ListUsers(ctx context.Context, in ListUsersInput) (*ListUsersR
 		statusPtr = &status
 	}
 
-	users, nextToken, err := s.repo.List(ctx, ListUsersFilter{
-		Limit:  limit,
-		Offset: offset,
-		Status: statusPtr,
-	})
-	if err != nil {
+	var (
+		users     []*User
+		nextToken string
+	)
+
+	if err := s.tx.WithinReadOnly(ctx, func(txCtx context.Context) error {
+		resultUsers, token, err := s.repo.List(txCtx, ListUsersFilter{
+			Limit:  limit,
+			Offset: offset,
+			Status: statusPtr,
+		})
+		if err != nil {
+			return err
+		}
+		users = resultUsers
+		nextToken = token
+		return nil
+	}); err != nil {
 		return nil, err
 	}
 

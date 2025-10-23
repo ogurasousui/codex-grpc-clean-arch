@@ -37,7 +37,8 @@ func main() {
 
 	greeterSvc := hello.NewService()
 	userRepo := postgres.NewUserRepository(dbPool)
-	userSvc := user.NewService(userRepo, nil)
+	txManager := pg.NewTransactionManager(dbPool)
+	userSvc := user.NewService(userRepo, nil, txManager)
 	grpcServer := server.New(cfg.Server.ListenAddr, greeterSvc, userSvc)
 
 	log.Printf("gRPC server listening on %s", cfg.Server.ListenAddr)
