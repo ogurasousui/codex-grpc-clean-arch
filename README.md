@@ -3,13 +3,14 @@
 Go 言語と Clean Architecture を採用した gRPC サーバーのテンプレートです。プロジェクト全体で責務を分離し、疎結合なユースケースとアダプタを構築するためのガイドラインとサンプル構成を提供します。
 
 ## Quick Start
+- ローカル環境でのより詳細な手順は `docs/workflow/local-setup.md` を参照してください。
 - **Prerequisites**: Go 1.22+, Buf CLI（または `bufbuild/buf` Docker イメージ）、Docker & Docker Compose、`golang-migrate`（マイグレーション実行用に推奨）。
 - **依存関係の同期**: `go mod tidy` を実行し、プロジェクトで利用するライブラリ（`pgx`, `yaml`, `testify` など）を取得します。
 - **プロトコル定義の検証/生成**: `cd proto && buf lint` / `buf generate` を実行します。Docker を使う場合は `docker run --rm -v $PWD:/workspace -w /workspace bufbuild/buf generate` のように呼び出します。
-- **PostgreSQL の起動**: `docker compose up -d postgres` で開発用 DB を立ち上げます。
+- **PostgreSQL の起動**: `docker compose --profile local up -d postgres` で開発用 DB を立ち上げます。
 - **マイグレーション**: `go run ./cmd/migrate up` で `assets/migrations` を適用できます（`down`, `drop`, `version` もサポート）。外部ツール `golang-migrate` を使う場合は同ディレクトリを参照してください。
 - **シードデータ**: 統合テスト等で初期データが必要な場合は `go run ./cmd/migrate -dir assets/seeds up` を実行します（`down` で巻き戻し可能）。
-- **サーバーの起動**: `CONFIG_PATH=assets/local.yaml go run ./cmd/server` もしくは `docker compose up server` で gRPC サーバーを起動します。
+- **サーバーの起動**: `CONFIG_PATH=assets/local.yaml go run ./cmd/server` もしくは `docker compose up server` で gRPC サーバーを起動します（Compose 側は内部ネットワーク接続のため `assets/local-compose.yaml` を参照しています）。API サーバーと PostgreSQL を同時に立ち上げたい場合は `docker compose --profile local up -d` を利用できます。
 - **テスト実行**: `go test ./...` または `docker compose run --rm server go test ./...` でユニットテストを実行します。PostgreSQL を使用する統合テストは `CONFIG_PATH=assets/local.yaml go test -tags=integration ./test/...` で実行します。
 
 ## Project Layout

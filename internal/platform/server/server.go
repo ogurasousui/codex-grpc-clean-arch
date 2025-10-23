@@ -12,6 +12,7 @@ import (
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/hello"
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/user"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 // Server は gRPC サーバーのライフサイクルを管理します。
@@ -27,6 +28,7 @@ func New(listenAddr string, greeter hello.Greeter, userSvc user.UseCase, opts ..
 	greeterpb.RegisterGreeterServiceServer(srv, greeterHandler)
 	userHandler := handler.NewUserGrpcHandler(userSvc)
 	userpb.RegisterUserServiceServer(srv, userHandler)
+	reflection.Register(srv)
 
 	return &Server{
 		listenAddr: listenAddr,

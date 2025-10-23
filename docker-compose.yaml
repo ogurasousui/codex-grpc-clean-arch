@@ -9,9 +9,11 @@ services:
       - "50051:50051"
     environment:
       - GO111MODULE=on
-      - CONFIG_PATH=assets/local.yaml
+      - CONFIG_PATH=assets/local-compose.yaml
     depends_on:
       - postgres
+    profiles:
+      - local
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -28,5 +30,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    profiles:
+      - local
 volumes:
   postgres-data:
