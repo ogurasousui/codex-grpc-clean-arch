@@ -3,8 +3,9 @@
 ## 1. プロトコル定義
 - `proto/service.proto` を作成し、以下の要件を満たす gRPC サービスを定義する。
   - サービス名: `GreeterService`（暫定）。
-  - メソッド: `rpc SayHello(google.protobuf.Empty) returns (SimpleResponse);`。
-  - レスポンスメッセージ `SimpleResponse` に `string message = 1;` を持たせ、初期実装では空文字列を返す。
+  - メソッド: `rpc SayHello(SayHelloRequest) returns (SayHelloResponse);`。
+  - リクエストメッセージ `SayHelloRequest` は現状フィールド無しのプレースホルダー。
+  - レスポンスメッセージ `SayHelloResponse` に `string message = 1;` を持たせ、初期実装では空文字列を返す。
 - `buf.yaml` / `buf.gen.yaml` を `proto/` 直下に追加し、`buf generate` で Go コードを生成できるようにする。
 
 ## 2. コード生成とディレクトリ準備

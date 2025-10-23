@@ -3,23 +3,30 @@ package postgres
 import (
 	"context"
 	"errors"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/user"
 )
 
 const uniqueViolationCode = "23505"
 
+type pgxPool interface {
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
+}
+
 // UserRepository は PostgreSQL を利用したユーザー永続化の実装です。
 type UserRepository struct {
-	pool *pgxpool.Pool
+	pool pgxPool
 }
 
 // NewUserRepository は UserRepository を生成します。
-func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
+func NewUserRepository(pool pgxPool) *UserRepository {
 	return &UserRepository{pool: pool}
 }
 
@@ -98,6 +105,72 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*user.U
 		return nil, translatePgError(err)
 	}
 	return found, nil
+}
+
+// List はユーザーの一覧を取得します。
+func (r *UserRepository) List(ctx context.Context, filter user.ListUsersFilter) ([]*user.User, string, error) {
+	if filter.Limit <= 0 {
+		return nil, "", user.ErrInvalidPageSize
+	}
+	if filter.Offset < 0 {
+		return nil, "", user.ErrInvalidPageToken
+	}
+
+	limitWithBuffer := filter.Limit + 1
+
+	args := make([]any, 0, 3)
+	conditions := make([]string, 0, 1)
+
+	if filter.Status != nil {
+		placeholder := "$" + strconv.Itoa(len(args)+1)
+		conditions = append(conditions, "status = "+placeholder)
+		args = append(args, *filter.Status)
+	}
+
+	whereClause := ""
+	if len(conditions) > 0 {
+		whereClause = " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	limitPlaceholder := "$" + strconv.Itoa(len(args)+1)
+	args = append(args, limitWithBuffer)
+	offsetPlaceholder := "$" + strconv.Itoa(len(args)+1)
+	args = append(args, filter.Offset)
+
+	query := `
+        SELECT id, email, name, status, created_at, updated_at
+          FROM users` + whereClause + `
+         ORDER BY created_at DESC, id DESC
+         LIMIT ` + limitPlaceholder + `
+        OFFSET ` + offsetPlaceholder + `
+    `
+
+	rows, err := r.pool.Query(ctx, query, args...)
+	if err != nil {
+		return nil, "", translatePgError(err)
+	}
+	defer rows.Close()
+
+	var users []*user.User
+	for rows.Next() {
+		found, err := scanUser(rows)
+		if err != nil {
+			return nil, "", translatePgError(err)
+		}
+		users = append(users, found)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, "", translatePgError(err)
+	}
+
+	var nextToken string
+	if len(users) > filter.Limit {
+		nextToken = strconv.Itoa(filter.Offset + filter.Limit)
+		users = users[:filter.Limit]
+	}
+
+	return users, nextToken, nil
 }
 
 func scanUser(row pgx.Row) (*user.User, error) {

@@ -15,4 +15,8 @@ var (
 	ErrInvalidStatus = errors.New("invalid status")
 	// ErrInvalidID はIDが不正な場合に返却されます。
 	ErrInvalidID = errors.New("invalid id")
+	// ErrInvalidPageSize は一覧取得時のページサイズが不正な場合に返却されます。
+	ErrInvalidPageSize = errors.New("invalid page size")
+	// ErrInvalidPageToken は一覧取得時のページトークンが不正な場合に返却されます。
+	ErrInvalidPageToken = errors.New("invalid page token")
 )

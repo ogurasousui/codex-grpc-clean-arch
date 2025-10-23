@@ -32,7 +32,7 @@
 - `proto/service.proto` に `UserService` を追加し、以下の RPC を定義。
   - `CreateUser(CreateUserRequest) returns (CreateUserResponse)`
   - `UpdateUser(UpdateUserRequest) returns (google.protobuf.Empty)`
-  - `DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty)`
+- `DeleteUser(DeleteUserRequest) returns (DeleteUserResponse)`
 - `buf generate` により `internal/adapters/grpc/gen/user/v1` 配下へコードを生成するよう `buf.gen.yaml` を更新。
 - `internal/adapters/grpc/handler/user.go` を実装し、ユースケースを注入してトランスレーションを行う。エラーハンドリングは gRPC ステータスコードにマッピング。
 - `internal/adapters/repository/postgres/user_repository.go` を作成し、SQL (`sqlc` もしくは `pgx` のプリペアドステートメント) でリポジトリインターフェースを実装。
