@@ -1,0 +1,2 @@
+-- Seed data for companies (optional in tests)
+-- Currently no default rows are inserted.
