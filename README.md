@@ -11,7 +11,7 @@ Go 言語と Clean Architecture を採用した gRPC サーバーのテンプレ
 - **マイグレーション**: `go run ./cmd/migrate up` で `assets/migrations` を適用できます（`down`, `drop`, `version` もサポート）。外部ツール `golang-migrate` を使う場合は同ディレクトリを参照してください。
 - **シードデータ**: 統合テスト等で初期データが必要な場合は `go run ./cmd/migrate -dir assets/seeds up` を実行します（`down` で巻き戻し可能）。
 - **サーバーの起動**: 初回は `docker compose --profile local build server` を実行して Air 同梱の開発用コンテナをビルドし、`make dev-up`（前面でログ表示）または `docker compose --profile local up server` でホットリロード付き gRPC サーバーを起動します。Air を使わず直接 Go を実行したい場合は `CONFIG_PATH=assets/local.yaml go run ./cmd/server` を利用してください。
-- **テスト実行**: `go test ./...` または `docker compose run --rm server go test ./...` でユニットテストを実行します。PostgreSQL を使用する統合テストは `CONFIG_PATH=assets/local.yaml go test -tags=integration ./test/...` で実行します。
+- **テスト実行**: `go test ./...` または `docker compose run --rm server go test ./...` でユニットテストを実行します。PostgreSQL を使用する統合テストは `CONFIG_PATH=assets/local.yaml go test -tags=integration ./test/...` を呼び出すか、CI と同じ `./scripts/ci/run_integration.sh` を利用して Docker で起動した Postgres に対して実行できます。
 
 ## Project Layout
 ```
@@ -32,7 +32,7 @@ docs/               追加ドキュメント (設計・運用ガイドなど)
 3. `internal/platform` で設定やライフサイクルを管理し、`cmd/server/main.go` で組み合わせます。
 4. `docker compose run --rm server go test ./...` でユニットテストを確認し、`-tags=integration` 付きで統合テストを実行します（ホストに Go がインストールされていなくても Docker で完結）。
 5. PR 作成前に `buf lint` や `golangci-lint run` を通し、`AGENTS.md` のガイドラインに従って説明文・検証手順を記載します。
-6. GitHub Actions (`.github/workflows/ci.yml`) が `go test ./...` を実行するため、テストが通る状態で push/PR を行ってください。
+6. GitHub Actions (`.github/workflows/ci.yml`) は Pull Request 作成・更新時のみ起動し、ユニットテスト (`go test ./...`) と Docker Compose ベースの統合テスト (`./scripts/ci/run_integration.sh`) を順に実行します。PR 作成前にローカルでも同等のテストを通しておいてください。
 
 ## Communication
 Issue や Pull Request、ドキュメントでの議論は日本語を基本とします。英語資料を参照する場合は日本語で要点をまとめ、チーム内共有を円滑にしてください。
