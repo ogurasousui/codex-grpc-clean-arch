@@ -3,7 +3,7 @@ server:
 
 database:
   host: "localhost"
-  port: 5432
+  port: 15432
   user: "app_user"
   password: "app_password"
   name: "app_db"

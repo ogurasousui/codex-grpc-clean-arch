@@ -38,7 +38,7 @@
 - シード投入が必要な場合はテストコードに任せる（既存の `applySeeds` が Up を実行するため追加コマンドは不要）。
 
 ### 5. 設定ファイル調整
-- `assets/ci.yaml` の `database.host` は GitHub Actions 上で `docker compose` からアクセスできるよう `localhost` を維持、ポートは `docker-compose.yaml` と一致させる。
+- `assets/ci.yaml` の `database.host` は GitHub Actions 上で `docker compose` からアクセスできるよう `localhost` を維持し、ポートは `docker-compose.yaml` のマッピング (`15432`) と一致させる。
 - CI 用に新たな `.env` が必要な場合は `assets/` 配下に追記し、Secrets は GitHub Actions の `env` で管理する。
 
 ## 実装手順
