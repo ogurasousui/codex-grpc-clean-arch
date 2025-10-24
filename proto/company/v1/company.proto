@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package company.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+option go_package = "github.com/ogurasousui/codex-grpc-clean-arch/internal/adapters/grpc/gen/company/v1;companypb";
+
+enum CompanyStatus {
+  COMPANY_STATUS_UNSPECIFIED = 0;
+  COMPANY_STATUS_ACTIVE = 1;
+  COMPANY_STATUS_INACTIVE = 2;
+}
+
+message Company {
+  string id = 1;
+  string name = 2;
+  string code = 3;
+  CompanyStatus status = 4;
+  google.protobuf.StringValue description = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+message CreateCompanyRequest {
+  string name = 1;
+  string code = 2;
+  google.protobuf.StringValue description = 3;
+}
+
+message CreateCompanyResponse {
+  Company company = 1;
+}
+
+message GetCompanyRequest {
+  string id = 1;
+}
+
+message GetCompanyResponse {
+  Company company = 1;
+}
+
+message ListCompaniesRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+  CompanyStatus status = 3;
+}
+
+message ListCompaniesResponse {
+  repeated Company companies = 1;
+  string next_page_token = 2;
+}
+
+message UpdateCompanyRequest {
+  string id = 1;
+  google.protobuf.StringValue name = 2;
+  google.protobuf.StringValue code = 3;
+  CompanyStatus status = 4;
+  google.protobuf.StringValue description = 5;
+}
+
+message UpdateCompanyResponse {
+  Company company = 1;
+}
+
+message DeleteCompanyRequest {
+  string id = 1;
+}
+
+message DeleteCompanyResponse {}
+
+service CompanyService {
+  rpc CreateCompany(CreateCompanyRequest) returns (CreateCompanyResponse);
+  rpc GetCompany(GetCompanyRequest) returns (GetCompanyResponse);
+  rpc ListCompanies(ListCompaniesRequest) returns (ListCompaniesResponse);
+  rpc UpdateCompany(UpdateCompanyRequest) returns (UpdateCompanyResponse);
+  rpc DeleteCompany(DeleteCompanyRequest) returns (DeleteCompanyResponse);
+}
