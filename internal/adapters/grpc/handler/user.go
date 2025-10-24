@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"errors"
 
 	userpb "github.com/ogurasousui/codex-grpc-clean-arch/internal/adapters/grpc/gen/user/v1"
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/user"
@@ -132,19 +131,6 @@ func (h *UserGrpcHandler) ListUsers(ctx context.Context, req *userpb.ListUsersRe
 		Users:         protoUsers,
 		NextPageToken: result.NextPageToken,
 	}, nil
-}
-
-func toStatusError(err error) error {
-	switch {
-	case errors.Is(err, user.ErrInvalidEmail), errors.Is(err, user.ErrInvalidName), errors.Is(err, user.ErrInvalidStatus), errors.Is(err, user.ErrInvalidID), errors.Is(err, user.ErrInvalidPageSize), errors.Is(err, user.ErrInvalidPageToken):
-		return status.Error(codes.InvalidArgument, err.Error())
-	case errors.Is(err, user.ErrEmailAlreadyExists):
-		return status.Error(codes.AlreadyExists, err.Error())
-	case errors.Is(err, user.ErrUserNotFound):
-		return status.Error(codes.NotFound, err.Error())
-	default:
-		return status.Error(codes.Internal, err.Error())
-	}
 }
 
 func toProtoUser(u *user.User) *userpb.User {

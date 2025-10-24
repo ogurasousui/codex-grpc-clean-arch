@@ -26,6 +26,11 @@ test/               統合テスト、エンドツーエンドシナリオ
 docs/               追加ドキュメント (設計・運用ガイドなど)
 ```
 
+## gRPC サービス
+- GreeterService: サンプル用の挨拶 RPC。Clean Architecture の構成例として維持されています。
+- UserService: ユーザーの作成・更新・削除・取得・一覧を提供します。
+- CompanyService: 会社の CRUD と一覧取得を提供する新規サービス。`proto/company/v1/company.proto` と `internal/core/company` 以下のユースケースに対応します。
+
 ## Development Workflow
 1. ユースケースを `internal/core` に追加し、インターフェースを定義します。
 2. `internal/adapters` で入出力層 (gRPC、DB) を実装し、ユースケースを注入します。

@@ -1,0 +1,1 @@
+-- Remove seeded companies (no-op)

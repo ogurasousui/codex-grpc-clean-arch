@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/adapters/repository/postgres"
+	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/company"
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/hello"
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/user"
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/platform/config"
@@ -36,10 +37,12 @@ func main() {
 	defer dbPool.Close()
 
 	greeterSvc := hello.NewService()
-	userRepo := postgres.NewUserRepository(dbPool)
 	txManager := pg.NewTransactionManager(dbPool)
+	userRepo := postgres.NewUserRepository(dbPool)
 	userSvc := user.NewService(userRepo, nil, txManager)
-	grpcServer := server.New(cfg.Server.ListenAddr, greeterSvc, userSvc)
+	companyRepo := postgres.NewCompanyRepository(dbPool)
+	companySvc := company.NewService(companyRepo, nil, txManager)
+	grpcServer := server.New(cfg.Server.ListenAddr, greeterSvc, userSvc, companySvc)
 
 	log.Printf("gRPC server listening on %s", cfg.Server.ListenAddr)
 
