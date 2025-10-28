@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/company"
+	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/employee"
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/user"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -24,11 +25,26 @@ func toStatusError(err error) error {
 		errors.Is(err, company.ErrInvalidStatus),
 		errors.Is(err, company.ErrInvalidID),
 		errors.Is(err, company.ErrInvalidPageSize),
-		errors.Is(err, company.ErrInvalidPageToken):
+		errors.Is(err, company.ErrInvalidPageToken),
+		errors.Is(err, employee.ErrInvalidID),
+		errors.Is(err, employee.ErrInvalidCompanyID),
+		errors.Is(err, employee.ErrInvalidEmployeeCode),
+		errors.Is(err, employee.ErrInvalidEmail),
+		errors.Is(err, employee.ErrInvalidLastName),
+		errors.Is(err, employee.ErrInvalidFirstName),
+		errors.Is(err, employee.ErrInvalidStatus),
+		errors.Is(err, employee.ErrInvalidPageSize),
+		errors.Is(err, employee.ErrInvalidPageToken),
+		errors.Is(err, employee.ErrInvalidDateRange):
 		return status.Error(codes.InvalidArgument, err.Error())
-	case errors.Is(err, user.ErrEmailAlreadyExists), errors.Is(err, company.ErrCodeAlreadyExists):
+	case errors.Is(err, user.ErrEmailAlreadyExists),
+		errors.Is(err, company.ErrCodeAlreadyExists),
+		errors.Is(err, employee.ErrEmployeeCodeAlreadyExists):
 		return status.Error(codes.AlreadyExists, err.Error())
-	case errors.Is(err, user.ErrUserNotFound), errors.Is(err, company.ErrCompanyNotFound):
+	case errors.Is(err, user.ErrUserNotFound),
+		errors.Is(err, company.ErrCompanyNotFound),
+		errors.Is(err, employee.ErrEmployeeNotFound),
+		errors.Is(err, employee.ErrCompanyNotFound):
 		return status.Error(codes.NotFound, err.Error())
 	default:
 		return status.Error(codes.Internal, err.Error())

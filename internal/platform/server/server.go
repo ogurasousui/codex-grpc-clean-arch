@@ -7,10 +7,12 @@ import (
 	"net"
 
 	companypb "github.com/ogurasousui/codex-grpc-clean-arch/internal/adapters/grpc/gen/company/v1"
+	employeepb "github.com/ogurasousui/codex-grpc-clean-arch/internal/adapters/grpc/gen/employee/v1"
 	greeterpb "github.com/ogurasousui/codex-grpc-clean-arch/internal/adapters/grpc/gen/greeter/v1"
 	userpb "github.com/ogurasousui/codex-grpc-clean-arch/internal/adapters/grpc/gen/user/v1"
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/adapters/grpc/handler"
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/company"
+	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/employee"
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/hello"
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/user"
 	"google.golang.org/grpc"
@@ -24,7 +26,7 @@ type Server struct {
 }
 
 // New は指定されたアドレスで待ち受ける gRPC サーバーを構築します。
-func New(listenAddr string, greeter hello.Greeter, userSvc user.UseCase, companySvc company.UseCase, opts ...grpc.ServerOption) *Server {
+func New(listenAddr string, greeter hello.Greeter, userSvc user.UseCase, companySvc company.UseCase, employeeSvc employee.UseCase, opts ...grpc.ServerOption) *Server {
 	srv := grpc.NewServer(opts...)
 	greeterHandler := handler.NewGreeterHandler(greeter)
 	greeterpb.RegisterGreeterServiceServer(srv, greeterHandler)
@@ -32,6 +34,8 @@ func New(listenAddr string, greeter hello.Greeter, userSvc user.UseCase, company
 	userpb.RegisterUserServiceServer(srv, userHandler)
 	companyHandler := handler.NewCompanyGrpcHandler(companySvc)
 	companypb.RegisterCompanyServiceServer(srv, companyHandler)
+	employeeHandler := handler.NewEmployeeGrpcHandler(employeeSvc)
+	employeepb.RegisterEmployeeServiceServer(srv, employeeHandler)
 	reflection.Register(srv)
 
 	return &Server{

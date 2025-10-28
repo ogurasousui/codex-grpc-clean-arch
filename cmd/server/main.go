@@ -9,6 +9,7 @@ import (
 
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/adapters/repository/postgres"
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/company"
+	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/employee"
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/hello"
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/user"
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/platform/config"
@@ -42,7 +43,9 @@ func main() {
 	userSvc := user.NewService(userRepo, nil, txManager)
 	companyRepo := postgres.NewCompanyRepository(dbPool)
 	companySvc := company.NewService(companyRepo, nil, txManager)
-	grpcServer := server.New(cfg.Server.ListenAddr, greeterSvc, userSvc, companySvc)
+	employeeRepo := postgres.NewEmployeeRepository(dbPool)
+	employeeSvc := employee.NewService(employeeRepo, nil, txManager)
+	grpcServer := server.New(cfg.Server.ListenAddr, greeterSvc, userSvc, companySvc, employeeSvc)
 
 	log.Printf("gRPC server listening on %s", cfg.Server.ListenAddr)
 

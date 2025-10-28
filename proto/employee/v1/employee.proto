@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+package employee.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+option go_package = "github.com/ogurasousui/codex-grpc-clean-arch/internal/adapters/grpc/gen/employee/v1;employeepb";
+
+enum EmployeeStatus {
+  EMPLOYEE_STATUS_UNSPECIFIED = 0;
+  EMPLOYEE_STATUS_ACTIVE = 1;
+  EMPLOYEE_STATUS_INACTIVE = 2;
+}
+
+message Employee {
+  string id = 1;
+  string company_id = 2;
+  string employee_code = 3;
+  google.protobuf.StringValue email = 4;
+  string last_name = 5;
+  string first_name = 6;
+  EmployeeStatus status = 7;
+  google.protobuf.StringValue hired_at = 8;
+  google.protobuf.StringValue terminated_at = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+message CreateEmployeeRequest {
+  string company_id = 1;
+  string employee_code = 2;
+  google.protobuf.StringValue email = 3;
+  string last_name = 4;
+  string first_name = 5;
+  EmployeeStatus status = 6;
+  google.protobuf.StringValue hired_at = 7;
+  google.protobuf.StringValue terminated_at = 8;
+}
+
+message CreateEmployeeResponse {
+  Employee employee = 1;
+}
+
+message GetEmployeeRequest {
+  string id = 1;
+}
+
+message GetEmployeeResponse {
+  Employee employee = 1;
+}
+
+message ListEmployeesRequest {
+  string company_id = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+  EmployeeStatus status = 4;
+}
+
+message ListEmployeesResponse {
+  repeated Employee employees = 1;
+  string next_page_token = 2;
+}
+
+message UpdateEmployeeRequest {
+  string id = 1;
+  google.protobuf.StringValue employee_code = 2;
+  google.protobuf.StringValue email = 3;
+  google.protobuf.StringValue last_name = 4;
+  google.protobuf.StringValue first_name = 5;
+  EmployeeStatus status = 6;
+  google.protobuf.StringValue hired_at = 7;
+  google.protobuf.StringValue terminated_at = 8;
+}
+
+message UpdateEmployeeResponse {
+  Employee employee = 1;
+}
+
+message DeleteEmployeeRequest {
+  string id = 1;
+}
+
+message DeleteEmployeeResponse {}
+
+service EmployeeService {
+  rpc CreateEmployee(CreateEmployeeRequest) returns (CreateEmployeeResponse);
+  rpc GetEmployee(GetEmployeeRequest) returns (GetEmployeeResponse);
+  rpc ListEmployees(ListEmployeesRequest) returns (ListEmployeesResponse);
+  rpc UpdateEmployee(UpdateEmployeeRequest) returns (UpdateEmployeeResponse);
+  rpc DeleteEmployee(DeleteEmployeeRequest) returns (DeleteEmployeeResponse);
+}
