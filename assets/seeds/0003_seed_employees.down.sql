@@ -1,0 +1,1 @@
+-- Remove seeded employees (no-op).

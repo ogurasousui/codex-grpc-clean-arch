@@ -1,0 +1,1 @@
+-- Seed data for employees (currently no default rows).
