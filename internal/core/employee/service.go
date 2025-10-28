@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Clock は現在時刻を提供します。
@@ -374,6 +376,9 @@ func normalizeEmployeeCode(raw string) (string, error) {
 func normalizeUserID(raw string) (string, error) {
 	trimmed := strings.TrimSpace(raw)
 	if trimmed == "" {
+		return "", ErrInvalidUserID
+	}
+	if _, err := uuid.Parse(trimmed); err != nil {
 		return "", ErrInvalidUserID
 	}
 	return trimmed, nil

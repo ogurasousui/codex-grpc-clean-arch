@@ -26,6 +26,7 @@ func TestScanEmployee_Success(t *testing.T) {
 	t.Parallel()
 
 	email := "user@example.com"
+	userID := "11111111-1111-1111-1111-111111111111"
 	hired := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	terminated := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)
 	createdAt := time.Now().UTC()
@@ -40,7 +41,7 @@ func TestScanEmployee_Success(t *testing.T) {
 		*(dest[0].(*string)) = "emp-1"
 		*(dest[1].(*string)) = "company-1"
 		*(dest[2].(*string)) = "emp-001"
-		*(dest[3].(*string)) = "user-1"
+		*(dest[3].(*string)) = userID
 		*(dest[4].(*string)) = string(employee.StatusActive)
 
 		hiredDest := dest[5].(*sql.NullTime)
@@ -54,7 +55,7 @@ func TestScanEmployee_Success(t *testing.T) {
 		*(dest[7].(*time.Time)) = createdAt
 		*(dest[8].(*time.Time)) = updatedAt
 
-		*(dest[9].(*string)) = "user-1"
+		*(dest[9].(*string)) = userID
 		*(dest[10].(*string)) = email
 		*(dest[11].(*string)) = "Taro Yamada"
 		*(dest[12].(*string)) = "active"
@@ -68,8 +69,8 @@ func TestScanEmployee_Success(t *testing.T) {
 		t.Fatalf("scanEmployee returned error: %v", err)
 	}
 
-	if emp.UserID != "user-1" {
-		t.Fatalf("expected user id user-1, got %s", emp.UserID)
+	if emp.UserID != userID {
+		t.Fatalf("expected user id %s, got %s", userID, emp.UserID)
 	}
 	if emp.User == nil || emp.User.Email != email {
 		t.Fatalf("expected user snapshot email %s", email)
@@ -160,10 +161,15 @@ func TestEmployeeRepository_List_WithFilters(t *testing.T) {
     `)
 
 	now := time.Now().UTC()
+	userIDs := []string{
+		"11111111-1111-1111-1111-111111111111",
+		"22222222-2222-2222-2222-222222222222",
+		"33333333-3333-3333-3333-333333333333",
+	}
 	rows := pgxmock.NewRows([]string{"id", "company_id", "employee_code", "user_id", "status", "hired_at", "terminated_at", "created_at", "updated_at", "user_id_join", "user_email", "user_name", "user_status", "user_created_at", "user_updated_at"}).
-		AddRow("emp-1", "company-1", "emp-1", "user-1", string(employee.StatusActive), nil, nil, now, now, "user-1", "user1@example.com", "User One", "active", now, now).
-		AddRow("emp-2", "company-1", "emp-2", "user-2", string(employee.StatusActive), nil, nil, now, now, "user-2", "user2@example.com", "User Two", "active", now, now).
-		AddRow("emp-3", "company-1", "emp-3", "user-3", string(employee.StatusInactive), nil, nil, now, now, "user-3", "user3@example.com", "User Three", "inactive", now, now)
+		AddRow("emp-1", "company-1", "emp-1", userIDs[0], string(employee.StatusActive), nil, nil, now, now, userIDs[0], "user1@example.com", "User One", "active", now, now).
+		AddRow("emp-2", "company-1", "emp-2", userIDs[1], string(employee.StatusActive), nil, nil, now, now, userIDs[1], "user2@example.com", "User Two", "active", now, now).
+		AddRow("emp-3", "company-1", "emp-3", userIDs[2], string(employee.StatusInactive), nil, nil, now, now, userIDs[2], "user3@example.com", "User Three", "inactive", now, now)
 
 	mock.ExpectQuery(query).
 		WithArgs("company-1", string(status), 3, 0).

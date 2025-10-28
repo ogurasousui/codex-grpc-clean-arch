@@ -27,6 +27,15 @@ func newFakeEmployeeRepo() *fakeEmployeeRepo {
 	return &fakeEmployeeRepo{employees: make(map[string]*Employee)}
 }
 
+const (
+	userID1 = "11111111-1111-1111-1111-111111111111"
+	userID2 = "22222222-2222-2222-2222-222222222222"
+	userID3 = "33333333-3333-3333-3333-333333333333"
+	userID4 = "44444444-4444-4444-4444-444444444444"
+	userID5 = "55555555-5555-5555-5555-555555555555"
+	userID6 = "66666666-6666-6666-6666-666666666666"
+)
+
 func (r *fakeEmployeeRepo) Create(_ context.Context, e *Employee) (*Employee, error) {
 	for _, existing := range r.employees {
 		if existing.CompanyID == e.CompanyID && existing.EmployeeCode == e.EmployeeCode {
@@ -151,7 +160,7 @@ func TestService_CreateEmployee_Success(t *testing.T) {
 	created, err := svc.CreateEmployee(context.Background(), CreateEmployeeInput{
 		CompanyID:    " company-1 ",
 		EmployeeCode: " Emp-001 ",
-		UserID:       " user-1 ",
+		UserID:       "  " + userID1 + "  ",
 		HiredAt:      &hired,
 	})
 	if err != nil {
@@ -164,7 +173,7 @@ func TestService_CreateEmployee_Success(t *testing.T) {
 	if created.EmployeeCode != "emp-001" {
 		t.Fatalf("expected normalized employee code, got %s", created.EmployeeCode)
 	}
-	if created.UserID != "user-1" {
+	if created.UserID != userID1 {
 		t.Fatalf("expected normalized user id, got %s", created.UserID)
 	}
 	if created.Status != StatusActive {
@@ -187,7 +196,7 @@ func TestService_CreateEmployee_DuplicateCode(t *testing.T) {
 	if _, err := svc.CreateEmployee(context.Background(), CreateEmployeeInput{
 		CompanyID:    "company-1",
 		EmployeeCode: "emp-1",
-		UserID:       "user-1",
+		UserID:       userID1,
 	}); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -195,7 +204,7 @@ func TestService_CreateEmployee_DuplicateCode(t *testing.T) {
 	_, err := svc.CreateEmployee(context.Background(), CreateEmployeeInput{
 		CompanyID:    "company-1",
 		EmployeeCode: "EMP-1",
-		UserID:       "user-2",
+		UserID:       userID2,
 	})
 	if !errors.Is(err, ErrEmployeeCodeAlreadyExists) {
 		t.Fatalf("expected ErrEmployeeCodeAlreadyExists, got %v", err)
@@ -214,7 +223,7 @@ func TestService_CreateEmployee_InvalidDateRange(t *testing.T) {
 	_, err := svc.CreateEmployee(context.Background(), CreateEmployeeInput{
 		CompanyID:    "company-1",
 		EmployeeCode: "emp-2",
-		UserID:       "user-2",
+		UserID:       userID2,
 		HiredAt:      &hired,
 		TerminatedAt: &terminated,
 	})
@@ -239,6 +248,22 @@ func TestService_CreateEmployee_InvalidUserID(t *testing.T) {
 	}
 }
 
+func TestService_CreateEmployee_InvalidUserIDFormat(t *testing.T) {
+	t.Parallel()
+
+	repo := newFakeEmployeeRepo()
+	svc := NewService(repo, &stubClock{now: time.Now().UTC()}, nil)
+
+	_, err := svc.CreateEmployee(context.Background(), CreateEmployeeInput{
+		CompanyID:    "company-1",
+		EmployeeCode: "emp-6",
+		UserID:       "not-a-uuid",
+	})
+	if !errors.Is(err, ErrInvalidUserID) {
+		t.Fatalf("expected ErrInvalidUserID for invalid format, got %v", err)
+	}
+}
+
 func TestService_UpdateEmployee_Success(t *testing.T) {
 	t.Parallel()
 
@@ -249,7 +274,7 @@ func TestService_UpdateEmployee_Success(t *testing.T) {
 	created, err := svc.CreateEmployee(context.Background(), CreateEmployeeInput{
 		CompanyID:    "company-1",
 		EmployeeCode: "emp-3",
-		UserID:       "user-3",
+		UserID:       userID3,
 	})
 	if err != nil {
 		t.Fatalf("CreateEmployee returned error: %v", err)
@@ -258,7 +283,7 @@ func TestService_UpdateEmployee_Success(t *testing.T) {
 	clk.now = clk.now.Add(time.Hour)
 
 	newCode := "EMP-999"
-	newUser := " user-5 "
+	newUser := "  " + userID5 + "  "
 	newStatus := StatusInactive
 	hired := time.Date(2024, 5, 1, 0, 0, 0, 0, time.UTC)
 	terminated := time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)
@@ -280,7 +305,7 @@ func TestService_UpdateEmployee_Success(t *testing.T) {
 	if updated.EmployeeCode != "emp-999" {
 		t.Fatalf("expected normalized code in update, got %s", updated.EmployeeCode)
 	}
-	if updated.UserID != "user-5" {
+	if updated.UserID != userID5 {
 		t.Fatalf("expected normalized user id, got %s", updated.UserID)
 	}
 	if updated.Status != StatusInactive {
@@ -306,7 +331,7 @@ func TestService_UpdateEmployee_InvalidStatus(t *testing.T) {
 	created, err := svc.CreateEmployee(context.Background(), CreateEmployeeInput{
 		CompanyID:    "company-1",
 		EmployeeCode: "emp-4",
-		UserID:       "user-4",
+		UserID:       userID4,
 	})
 	if err != nil {
 		t.Fatalf("CreateEmployee returned error: %v", err)
@@ -328,7 +353,7 @@ func TestService_UpdateEmployee_InvalidUserID(t *testing.T) {
 	created, err := svc.CreateEmployee(context.Background(), CreateEmployeeInput{
 		CompanyID:    "company-1",
 		EmployeeCode: "emp-10",
-		UserID:       "user-10",
+		UserID:       userID6,
 	})
 	if err != nil {
 		t.Fatalf("CreateEmployee returned error: %v", err)
@@ -349,12 +374,13 @@ func TestService_ListEmployees_FilterAndPagination(t *testing.T) {
 
 	// seed
 	statuses := []Status{StatusActive, StatusInactive, StatusActive}
+	seedUserIDs := []string{userID1, userID2, userID3}
 	for i := 0; i < 3; i++ {
 		status := statuses[i]
 		if _, err := svc.CreateEmployee(context.Background(), CreateEmployeeInput{
 			CompanyID:    "company-1",
 			EmployeeCode: fmt.Sprintf("emp-%d", i),
-			UserID:       fmt.Sprintf("user-%d", i),
+			UserID:       seedUserIDs[i],
 			Status:       &status,
 		}); err != nil {
 			t.Fatalf("unexpected seed error: %v", err)
