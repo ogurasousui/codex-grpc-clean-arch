@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/mail"
 	"regexp"
 	"strconv"
 	"strings"
@@ -82,9 +81,7 @@ func NewService(repo Repository, clock Clock, tx TransactionManager) *Service {
 type CreateEmployeeInput struct {
 	CompanyID    string
 	EmployeeCode string
-	Email        *string
-	LastName     string
-	FirstName    string
+	UserID       string
 	Status       *Status
 	HiredAt      *time.Time
 	TerminatedAt *time.Time
@@ -94,9 +91,7 @@ type CreateEmployeeInput struct {
 type UpdateEmployeeInput struct {
 	ID              string
 	EmployeeCode    *string
-	Email           *string
-	LastName        *string
-	FirstName       *string
+	UserID          *string
 	Status          *Status
 	HiredAt         *time.Time
 	HiredAtSet      bool
@@ -140,19 +135,9 @@ func (s *Service) CreateEmployee(ctx context.Context, in CreateEmployeeInput) (*
 		return nil, err
 	}
 
-	email, err := normalizeEmail(in.Email)
+	userID, err := normalizeUserID(in.UserID)
 	if err != nil {
 		return nil, err
-	}
-
-	lastName, err := normalizeName(in.LastName)
-	if err != nil {
-		return nil, ErrInvalidLastName
-	}
-
-	firstName, err := normalizeName(in.FirstName)
-	if err != nil {
-		return nil, ErrInvalidFirstName
 	}
 
 	hiredAt := normalizeDate(in.HiredAt)
@@ -180,9 +165,7 @@ func (s *Service) CreateEmployee(ctx context.Context, in CreateEmployeeInput) (*
 		emp := &Employee{
 			CompanyID:    companyID,
 			EmployeeCode: code,
-			Email:        email,
-			LastName:     lastName,
-			FirstName:    firstName,
+			UserID:       userID,
 			Status:       status,
 			HiredAt:      cloneTime(hiredAt),
 			TerminatedAt: cloneTime(terminatedAt),
@@ -230,28 +213,12 @@ func (s *Service) UpdateEmployee(ctx context.Context, in UpdateEmployeeInput) (*
 			}
 		}
 
-		if in.Email != nil {
-			email, err := normalizeEmail(in.Email)
+		if in.UserID != nil {
+			userID, err := normalizeUserID(*in.UserID)
 			if err != nil {
 				return err
 			}
-			existing.Email = email
-		}
-
-		if in.LastName != nil {
-			name, err := normalizeName(*in.LastName)
-			if err != nil {
-				return ErrInvalidLastName
-			}
-			existing.LastName = name
-		}
-
-		if in.FirstName != nil {
-			name, err := normalizeName(*in.FirstName)
-			if err != nil {
-				return ErrInvalidFirstName
-			}
-			existing.FirstName = name
+			existing.UserID = userID
 		}
 
 		if in.Status != nil {
@@ -404,31 +371,12 @@ func normalizeEmployeeCode(raw string) (string, error) {
 	return lower, nil
 }
 
-func normalizeName(raw string) (string, error) {
+func normalizeUserID(raw string) (string, error) {
 	trimmed := strings.TrimSpace(raw)
 	if trimmed == "" {
-		return "", fmt.Errorf("empty")
+		return "", ErrInvalidUserID
 	}
 	return trimmed, nil
-}
-
-func normalizeEmail(raw *string) (*string, error) {
-	if raw == nil {
-		return nil, nil
-	}
-
-	trimmed := strings.TrimSpace(*raw)
-	if trimmed == "" {
-		return nil, nil
-	}
-
-	addr, err := mail.ParseAddress(trimmed)
-	if err != nil {
-		return nil, ErrInvalidEmail
-	}
-
-	normalized := strings.ToLower(addr.Address)
-	return &normalized, nil
 }
 
 func normalizeDate(t *time.Time) *time.Time {

@@ -15,12 +15,21 @@ type Employee struct {
 	ID           string
 	CompanyID    string
 	EmployeeCode string
-	Email        *string
-	LastName     string
-	FirstName    string
+	UserID       string
 	Status       Status
 	HiredAt      *time.Time
 	TerminatedAt *time.Time
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
+	User         *UserSnapshot
+}
+
+// UserSnapshot は社員に紐づくユーザー情報のスナップショットです。
+type UserSnapshot struct {
+	ID        string
+	Email     string
+	Name      string
+	Status    string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }

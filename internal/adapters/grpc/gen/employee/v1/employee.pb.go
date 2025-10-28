@@ -7,6 +7,7 @@
 package employeepb
 
 import (
+	v1 "github.com/ogurasousui/codex-grpc-clean-arch/internal/adapters/grpc/gen/user/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -77,14 +78,13 @@ type Employee struct {
 	Id            string                  `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	CompanyId     string                  `protobuf:"bytes,2,opt,name=company_id,json=companyId,proto3" json:"company_id,omitempty"`
 	EmployeeCode  string                  `protobuf:"bytes,3,opt,name=employee_code,json=employeeCode,proto3" json:"employee_code,omitempty"`
-	Email         *wrapperspb.StringValue `protobuf:"bytes,4,opt,name=email,proto3" json:"email,omitempty"`
-	LastName      string                  `protobuf:"bytes,5,opt,name=last_name,json=lastName,proto3" json:"last_name,omitempty"`
-	FirstName     string                  `protobuf:"bytes,6,opt,name=first_name,json=firstName,proto3" json:"first_name,omitempty"`
-	Status        EmployeeStatus          `protobuf:"varint,7,opt,name=status,proto3,enum=employee.v1.EmployeeStatus" json:"status,omitempty"`
-	HiredAt       *wrapperspb.StringValue `protobuf:"bytes,8,opt,name=hired_at,json=hiredAt,proto3" json:"hired_at,omitempty"`
-	TerminatedAt  *wrapperspb.StringValue `protobuf:"bytes,9,opt,name=terminated_at,json=terminatedAt,proto3" json:"terminated_at,omitempty"`
-	CreatedAt     *timestamppb.Timestamp  `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     *timestamppb.Timestamp  `protobuf:"bytes,11,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	UserId        string                  `protobuf:"bytes,4,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Status        EmployeeStatus          `protobuf:"varint,5,opt,name=status,proto3,enum=employee.v1.EmployeeStatus" json:"status,omitempty"`
+	HiredAt       *wrapperspb.StringValue `protobuf:"bytes,6,opt,name=hired_at,json=hiredAt,proto3" json:"hired_at,omitempty"`
+	TerminatedAt  *wrapperspb.StringValue `protobuf:"bytes,7,opt,name=terminated_at,json=terminatedAt,proto3" json:"terminated_at,omitempty"`
+	CreatedAt     *timestamppb.Timestamp  `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp  `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	User          *UserSummary            `protobuf:"bytes,10,opt,name=user,proto3" json:"user,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -140,23 +140,9 @@ func (x *Employee) GetEmployeeCode() string {
 	return ""
 }
 
-func (x *Employee) GetEmail() *wrapperspb.StringValue {
+func (x *Employee) GetUserId() string {
 	if x != nil {
-		return x.Email
-	}
-	return nil
-}
-
-func (x *Employee) GetLastName() string {
-	if x != nil {
-		return x.LastName
-	}
-	return ""
-}
-
-func (x *Employee) GetFirstName() string {
-	if x != nil {
-		return x.FirstName
+		return x.UserId
 	}
 	return ""
 }
@@ -196,23 +182,112 @@ func (x *Employee) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *Employee) GetUser() *UserSummary {
+	if x != nil {
+		return x.User
+	}
+	return nil
+}
+
+type UserSummary struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Status        v1.UserStatus          `protobuf:"varint,4,opt,name=status,proto3,enum=user.v1.UserStatus" json:"status,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UserSummary) Reset() {
+	*x = UserSummary{}
+	mi := &file_employee_v1_employee_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UserSummary) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserSummary) ProtoMessage() {}
+
+func (x *UserSummary) ProtoReflect() protoreflect.Message {
+	mi := &file_employee_v1_employee_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserSummary.ProtoReflect.Descriptor instead.
+func (*UserSummary) Descriptor() ([]byte, []int) {
+	return file_employee_v1_employee_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *UserSummary) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UserSummary) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *UserSummary) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *UserSummary) GetStatus() v1.UserStatus {
+	if x != nil {
+		return x.Status
+	}
+	return v1.UserStatus(0)
+}
+
+func (x *UserSummary) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *UserSummary) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
 type CreateEmployeeRequest struct {
 	state         protoimpl.MessageState  `protogen:"open.v1"`
 	CompanyId     string                  `protobuf:"bytes,1,opt,name=company_id,json=companyId,proto3" json:"company_id,omitempty"`
 	EmployeeCode  string                  `protobuf:"bytes,2,opt,name=employee_code,json=employeeCode,proto3" json:"employee_code,omitempty"`
-	Email         *wrapperspb.StringValue `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
-	LastName      string                  `protobuf:"bytes,4,opt,name=last_name,json=lastName,proto3" json:"last_name,omitempty"`
-	FirstName     string                  `protobuf:"bytes,5,opt,name=first_name,json=firstName,proto3" json:"first_name,omitempty"`
-	Status        EmployeeStatus          `protobuf:"varint,6,opt,name=status,proto3,enum=employee.v1.EmployeeStatus" json:"status,omitempty"`
-	HiredAt       *wrapperspb.StringValue `protobuf:"bytes,7,opt,name=hired_at,json=hiredAt,proto3" json:"hired_at,omitempty"`
-	TerminatedAt  *wrapperspb.StringValue `protobuf:"bytes,8,opt,name=terminated_at,json=terminatedAt,proto3" json:"terminated_at,omitempty"`
+	UserId        string                  `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Status        EmployeeStatus          `protobuf:"varint,4,opt,name=status,proto3,enum=employee.v1.EmployeeStatus" json:"status,omitempty"`
+	HiredAt       *wrapperspb.StringValue `protobuf:"bytes,5,opt,name=hired_at,json=hiredAt,proto3" json:"hired_at,omitempty"`
+	TerminatedAt  *wrapperspb.StringValue `protobuf:"bytes,6,opt,name=terminated_at,json=terminatedAt,proto3" json:"terminated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateEmployeeRequest) Reset() {
 	*x = CreateEmployeeRequest{}
-	mi := &file_employee_v1_employee_proto_msgTypes[1]
+	mi := &file_employee_v1_employee_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -224,7 +299,7 @@ func (x *CreateEmployeeRequest) String() string {
 func (*CreateEmployeeRequest) ProtoMessage() {}
 
 func (x *CreateEmployeeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_employee_v1_employee_proto_msgTypes[1]
+	mi := &file_employee_v1_employee_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -237,7 +312,7 @@ func (x *CreateEmployeeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateEmployeeRequest.ProtoReflect.Descriptor instead.
 func (*CreateEmployeeRequest) Descriptor() ([]byte, []int) {
-	return file_employee_v1_employee_proto_rawDescGZIP(), []int{1}
+	return file_employee_v1_employee_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *CreateEmployeeRequest) GetCompanyId() string {
@@ -254,23 +329,9 @@ func (x *CreateEmployeeRequest) GetEmployeeCode() string {
 	return ""
 }
 
-func (x *CreateEmployeeRequest) GetEmail() *wrapperspb.StringValue {
+func (x *CreateEmployeeRequest) GetUserId() string {
 	if x != nil {
-		return x.Email
-	}
-	return nil
-}
-
-func (x *CreateEmployeeRequest) GetLastName() string {
-	if x != nil {
-		return x.LastName
-	}
-	return ""
-}
-
-func (x *CreateEmployeeRequest) GetFirstName() string {
-	if x != nil {
-		return x.FirstName
+		return x.UserId
 	}
 	return ""
 }
@@ -305,7 +366,7 @@ type CreateEmployeeResponse struct {
 
 func (x *CreateEmployeeResponse) Reset() {
 	*x = CreateEmployeeResponse{}
-	mi := &file_employee_v1_employee_proto_msgTypes[2]
+	mi := &file_employee_v1_employee_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -317,7 +378,7 @@ func (x *CreateEmployeeResponse) String() string {
 func (*CreateEmployeeResponse) ProtoMessage() {}
 
 func (x *CreateEmployeeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_employee_v1_employee_proto_msgTypes[2]
+	mi := &file_employee_v1_employee_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -330,7 +391,7 @@ func (x *CreateEmployeeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateEmployeeResponse.ProtoReflect.Descriptor instead.
 func (*CreateEmployeeResponse) Descriptor() ([]byte, []int) {
-	return file_employee_v1_employee_proto_rawDescGZIP(), []int{2}
+	return file_employee_v1_employee_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *CreateEmployeeResponse) GetEmployee() *Employee {
@@ -349,7 +410,7 @@ type GetEmployeeRequest struct {
 
 func (x *GetEmployeeRequest) Reset() {
 	*x = GetEmployeeRequest{}
-	mi := &file_employee_v1_employee_proto_msgTypes[3]
+	mi := &file_employee_v1_employee_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -361,7 +422,7 @@ func (x *GetEmployeeRequest) String() string {
 func (*GetEmployeeRequest) ProtoMessage() {}
 
 func (x *GetEmployeeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_employee_v1_employee_proto_msgTypes[3]
+	mi := &file_employee_v1_employee_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -374,7 +435,7 @@ func (x *GetEmployeeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetEmployeeRequest.ProtoReflect.Descriptor instead.
 func (*GetEmployeeRequest) Descriptor() ([]byte, []int) {
-	return file_employee_v1_employee_proto_rawDescGZIP(), []int{3}
+	return file_employee_v1_employee_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *GetEmployeeRequest) GetId() string {
@@ -393,7 +454,7 @@ type GetEmployeeResponse struct {
 
 func (x *GetEmployeeResponse) Reset() {
 	*x = GetEmployeeResponse{}
-	mi := &file_employee_v1_employee_proto_msgTypes[4]
+	mi := &file_employee_v1_employee_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -405,7 +466,7 @@ func (x *GetEmployeeResponse) String() string {
 func (*GetEmployeeResponse) ProtoMessage() {}
 
 func (x *GetEmployeeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_employee_v1_employee_proto_msgTypes[4]
+	mi := &file_employee_v1_employee_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -418,7 +479,7 @@ func (x *GetEmployeeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetEmployeeResponse.ProtoReflect.Descriptor instead.
 func (*GetEmployeeResponse) Descriptor() ([]byte, []int) {
-	return file_employee_v1_employee_proto_rawDescGZIP(), []int{4}
+	return file_employee_v1_employee_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetEmployeeResponse) GetEmployee() *Employee {
@@ -440,7 +501,7 @@ type ListEmployeesRequest struct {
 
 func (x *ListEmployeesRequest) Reset() {
 	*x = ListEmployeesRequest{}
-	mi := &file_employee_v1_employee_proto_msgTypes[5]
+	mi := &file_employee_v1_employee_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -452,7 +513,7 @@ func (x *ListEmployeesRequest) String() string {
 func (*ListEmployeesRequest) ProtoMessage() {}
 
 func (x *ListEmployeesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_employee_v1_employee_proto_msgTypes[5]
+	mi := &file_employee_v1_employee_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -465,7 +526,7 @@ func (x *ListEmployeesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListEmployeesRequest.ProtoReflect.Descriptor instead.
 func (*ListEmployeesRequest) Descriptor() ([]byte, []int) {
-	return file_employee_v1_employee_proto_rawDescGZIP(), []int{5}
+	return file_employee_v1_employee_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ListEmployeesRequest) GetCompanyId() string {
@@ -506,7 +567,7 @@ type ListEmployeesResponse struct {
 
 func (x *ListEmployeesResponse) Reset() {
 	*x = ListEmployeesResponse{}
-	mi := &file_employee_v1_employee_proto_msgTypes[6]
+	mi := &file_employee_v1_employee_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -518,7 +579,7 @@ func (x *ListEmployeesResponse) String() string {
 func (*ListEmployeesResponse) ProtoMessage() {}
 
 func (x *ListEmployeesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_employee_v1_employee_proto_msgTypes[6]
+	mi := &file_employee_v1_employee_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -531,7 +592,7 @@ func (x *ListEmployeesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListEmployeesResponse.ProtoReflect.Descriptor instead.
 func (*ListEmployeesResponse) Descriptor() ([]byte, []int) {
-	return file_employee_v1_employee_proto_rawDescGZIP(), []int{6}
+	return file_employee_v1_employee_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ListEmployeesResponse) GetEmployees() []*Employee {
@@ -552,19 +613,17 @@ type UpdateEmployeeRequest struct {
 	state         protoimpl.MessageState  `protogen:"open.v1"`
 	Id            string                  `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	EmployeeCode  *wrapperspb.StringValue `protobuf:"bytes,2,opt,name=employee_code,json=employeeCode,proto3" json:"employee_code,omitempty"`
-	Email         *wrapperspb.StringValue `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
-	LastName      *wrapperspb.StringValue `protobuf:"bytes,4,opt,name=last_name,json=lastName,proto3" json:"last_name,omitempty"`
-	FirstName     *wrapperspb.StringValue `protobuf:"bytes,5,opt,name=first_name,json=firstName,proto3" json:"first_name,omitempty"`
-	Status        EmployeeStatus          `protobuf:"varint,6,opt,name=status,proto3,enum=employee.v1.EmployeeStatus" json:"status,omitempty"`
-	HiredAt       *wrapperspb.StringValue `protobuf:"bytes,7,opt,name=hired_at,json=hiredAt,proto3" json:"hired_at,omitempty"`
-	TerminatedAt  *wrapperspb.StringValue `protobuf:"bytes,8,opt,name=terminated_at,json=terminatedAt,proto3" json:"terminated_at,omitempty"`
+	UserId        *wrapperspb.StringValue `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Status        EmployeeStatus          `protobuf:"varint,4,opt,name=status,proto3,enum=employee.v1.EmployeeStatus" json:"status,omitempty"`
+	HiredAt       *wrapperspb.StringValue `protobuf:"bytes,5,opt,name=hired_at,json=hiredAt,proto3" json:"hired_at,omitempty"`
+	TerminatedAt  *wrapperspb.StringValue `protobuf:"bytes,6,opt,name=terminated_at,json=terminatedAt,proto3" json:"terminated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UpdateEmployeeRequest) Reset() {
 	*x = UpdateEmployeeRequest{}
-	mi := &file_employee_v1_employee_proto_msgTypes[7]
+	mi := &file_employee_v1_employee_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -576,7 +635,7 @@ func (x *UpdateEmployeeRequest) String() string {
 func (*UpdateEmployeeRequest) ProtoMessage() {}
 
 func (x *UpdateEmployeeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_employee_v1_employee_proto_msgTypes[7]
+	mi := &file_employee_v1_employee_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -589,7 +648,7 @@ func (x *UpdateEmployeeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateEmployeeRequest.ProtoReflect.Descriptor instead.
 func (*UpdateEmployeeRequest) Descriptor() ([]byte, []int) {
-	return file_employee_v1_employee_proto_rawDescGZIP(), []int{7}
+	return file_employee_v1_employee_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *UpdateEmployeeRequest) GetId() string {
@@ -606,23 +665,9 @@ func (x *UpdateEmployeeRequest) GetEmployeeCode() *wrapperspb.StringValue {
 	return nil
 }
 
-func (x *UpdateEmployeeRequest) GetEmail() *wrapperspb.StringValue {
+func (x *UpdateEmployeeRequest) GetUserId() *wrapperspb.StringValue {
 	if x != nil {
-		return x.Email
-	}
-	return nil
-}
-
-func (x *UpdateEmployeeRequest) GetLastName() *wrapperspb.StringValue {
-	if x != nil {
-		return x.LastName
-	}
-	return nil
-}
-
-func (x *UpdateEmployeeRequest) GetFirstName() *wrapperspb.StringValue {
-	if x != nil {
-		return x.FirstName
+		return x.UserId
 	}
 	return nil
 }
@@ -657,7 +702,7 @@ type UpdateEmployeeResponse struct {
 
 func (x *UpdateEmployeeResponse) Reset() {
 	*x = UpdateEmployeeResponse{}
-	mi := &file_employee_v1_employee_proto_msgTypes[8]
+	mi := &file_employee_v1_employee_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -669,7 +714,7 @@ func (x *UpdateEmployeeResponse) String() string {
 func (*UpdateEmployeeResponse) ProtoMessage() {}
 
 func (x *UpdateEmployeeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_employee_v1_employee_proto_msgTypes[8]
+	mi := &file_employee_v1_employee_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -682,7 +727,7 @@ func (x *UpdateEmployeeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateEmployeeResponse.ProtoReflect.Descriptor instead.
 func (*UpdateEmployeeResponse) Descriptor() ([]byte, []int) {
-	return file_employee_v1_employee_proto_rawDescGZIP(), []int{8}
+	return file_employee_v1_employee_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *UpdateEmployeeResponse) GetEmployee() *Employee {
@@ -701,7 +746,7 @@ type DeleteEmployeeRequest struct {
 
 func (x *DeleteEmployeeRequest) Reset() {
 	*x = DeleteEmployeeRequest{}
-	mi := &file_employee_v1_employee_proto_msgTypes[9]
+	mi := &file_employee_v1_employee_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -713,7 +758,7 @@ func (x *DeleteEmployeeRequest) String() string {
 func (*DeleteEmployeeRequest) ProtoMessage() {}
 
 func (x *DeleteEmployeeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_employee_v1_employee_proto_msgTypes[9]
+	mi := &file_employee_v1_employee_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -726,7 +771,7 @@ func (x *DeleteEmployeeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteEmployeeRequest.ProtoReflect.Descriptor instead.
 func (*DeleteEmployeeRequest) Descriptor() ([]byte, []int) {
-	return file_employee_v1_employee_proto_rawDescGZIP(), []int{9}
+	return file_employee_v1_employee_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *DeleteEmployeeRequest) GetId() string {
@@ -744,7 +789,7 @@ type DeleteEmployeeResponse struct {
 
 func (x *DeleteEmployeeResponse) Reset() {
 	*x = DeleteEmployeeResponse{}
-	mi := &file_employee_v1_employee_proto_msgTypes[10]
+	mi := &file_employee_v1_employee_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -756,7 +801,7 @@ func (x *DeleteEmployeeResponse) String() string {
 func (*DeleteEmployeeResponse) ProtoMessage() {}
 
 func (x *DeleteEmployeeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_employee_v1_employee_proto_msgTypes[10]
+	mi := &file_employee_v1_employee_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -769,42 +814,46 @@ func (x *DeleteEmployeeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteEmployeeResponse.ProtoReflect.Descriptor instead.
 func (*DeleteEmployeeResponse) Descriptor() ([]byte, []int) {
-	return file_employee_v1_employee_proto_rawDescGZIP(), []int{10}
+	return file_employee_v1_employee_proto_rawDescGZIP(), []int{11}
 }
 
 var File_employee_v1_employee_proto protoreflect.FileDescriptor
 
 const file_employee_v1_employee_proto_rawDesc = "" +
 	"\n" +
-	"\x1aemployee/v1/employee.proto\x12\vemployee.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/wrappers.proto\"\xf5\x03\n" +
+	"\x1aemployee/v1/employee.proto\x12\vemployee.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/wrappers.proto\x1a\x12user/v1/user.proto\"\xcc\x03\n" +
 	"\bEmployee\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
 	"company_id\x18\x02 \x01(\tR\tcompanyId\x12#\n" +
-	"\remployee_code\x18\x03 \x01(\tR\femployeeCode\x122\n" +
-	"\x05email\x18\x04 \x01(\v2\x1c.google.protobuf.StringValueR\x05email\x12\x1b\n" +
-	"\tlast_name\x18\x05 \x01(\tR\blastName\x12\x1d\n" +
+	"\remployee_code\x18\x03 \x01(\tR\femployeeCode\x12\x17\n" +
+	"\auser_id\x18\x04 \x01(\tR\x06userId\x123\n" +
+	"\x06status\x18\x05 \x01(\x0e2\x1b.employee.v1.EmployeeStatusR\x06status\x127\n" +
+	"\bhired_at\x18\x06 \x01(\v2\x1c.google.protobuf.StringValueR\ahiredAt\x12A\n" +
+	"\rterminated_at\x18\a \x01(\v2\x1c.google.protobuf.StringValueR\fterminatedAt\x129\n" +
 	"\n" +
-	"first_name\x18\x06 \x01(\tR\tfirstName\x123\n" +
-	"\x06status\x18\a \x01(\x0e2\x1b.employee.v1.EmployeeStatusR\x06status\x127\n" +
-	"\bhired_at\x18\b \x01(\v2\x1c.google.protobuf.StringValueR\ahiredAt\x12A\n" +
-	"\rterminated_at\x18\t \x01(\v2\x1c.google.protobuf.StringValueR\fterminatedAt\x129\n" +
+	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"created_at\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12,\n" +
+	"\x04user\x18\n" +
+	" \x01(\v2\x18.employee.v1.UserSummaryR\x04user\"\xea\x01\n" +
+	"\vUserSummary\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
+	"\x05email\x18\x02 \x01(\tR\x05email\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12+\n" +
+	"\x06status\x18\x04 \x01(\x0e2\x13.user.v1.UserStatusR\x06status\x129\n" +
 	"\n" +
-	"updated_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xfc\x02\n" +
+	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"\n" +
+	"updated_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xa5\x02\n" +
 	"\x15CreateEmployeeRequest\x12\x1d\n" +
 	"\n" +
 	"company_id\x18\x01 \x01(\tR\tcompanyId\x12#\n" +
-	"\remployee_code\x18\x02 \x01(\tR\femployeeCode\x122\n" +
-	"\x05email\x18\x03 \x01(\v2\x1c.google.protobuf.StringValueR\x05email\x12\x1b\n" +
-	"\tlast_name\x18\x04 \x01(\tR\blastName\x12\x1d\n" +
-	"\n" +
-	"first_name\x18\x05 \x01(\tR\tfirstName\x123\n" +
-	"\x06status\x18\x06 \x01(\x0e2\x1b.employee.v1.EmployeeStatusR\x06status\x127\n" +
-	"\bhired_at\x18\a \x01(\v2\x1c.google.protobuf.StringValueR\ahiredAt\x12A\n" +
-	"\rterminated_at\x18\b \x01(\v2\x1c.google.protobuf.StringValueR\fterminatedAt\"K\n" +
+	"\remployee_code\x18\x02 \x01(\tR\femployeeCode\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\x123\n" +
+	"\x06status\x18\x04 \x01(\x0e2\x1b.employee.v1.EmployeeStatusR\x06status\x127\n" +
+	"\bhired_at\x18\x05 \x01(\v2\x1c.google.protobuf.StringValueR\ahiredAt\x12A\n" +
+	"\rterminated_at\x18\x06 \x01(\v2\x1c.google.protobuf.StringValueR\fterminatedAt\"K\n" +
 	"\x16CreateEmployeeResponse\x121\n" +
 	"\bemployee\x18\x01 \x01(\v2\x15.employee.v1.EmployeeR\bemployee\"$\n" +
 	"\x12GetEmployeeRequest\x12\x0e\n" +
@@ -820,17 +869,14 @@ const file_employee_v1_employee_proto_rawDesc = "" +
 	"\x06status\x18\x04 \x01(\x0e2\x1b.employee.v1.EmployeeStatusR\x06status\"t\n" +
 	"\x15ListEmployeesResponse\x123\n" +
 	"\temployees\x18\x01 \x03(\v2\x15.employee.v1.EmployeeR\temployees\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xc7\x03\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xd2\x02\n" +
 	"\x15UpdateEmployeeRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12A\n" +
-	"\remployee_code\x18\x02 \x01(\v2\x1c.google.protobuf.StringValueR\femployeeCode\x122\n" +
-	"\x05email\x18\x03 \x01(\v2\x1c.google.protobuf.StringValueR\x05email\x129\n" +
-	"\tlast_name\x18\x04 \x01(\v2\x1c.google.protobuf.StringValueR\blastName\x12;\n" +
-	"\n" +
-	"first_name\x18\x05 \x01(\v2\x1c.google.protobuf.StringValueR\tfirstName\x123\n" +
-	"\x06status\x18\x06 \x01(\x0e2\x1b.employee.v1.EmployeeStatusR\x06status\x127\n" +
-	"\bhired_at\x18\a \x01(\v2\x1c.google.protobuf.StringValueR\ahiredAt\x12A\n" +
-	"\rterminated_at\x18\b \x01(\v2\x1c.google.protobuf.StringValueR\fterminatedAt\"K\n" +
+	"\remployee_code\x18\x02 \x01(\v2\x1c.google.protobuf.StringValueR\femployeeCode\x125\n" +
+	"\auser_id\x18\x03 \x01(\v2\x1c.google.protobuf.StringValueR\x06userId\x123\n" +
+	"\x06status\x18\x04 \x01(\x0e2\x1b.employee.v1.EmployeeStatusR\x06status\x127\n" +
+	"\bhired_at\x18\x05 \x01(\v2\x1c.google.protobuf.StringValueR\ahiredAt\x12A\n" +
+	"\rterminated_at\x18\x06 \x01(\v2\x1c.google.protobuf.StringValueR\fterminatedAt\"K\n" +
 	"\x16UpdateEmployeeResponse\x121\n" +
 	"\bemployee\x18\x01 \x01(\v2\x15.employee.v1.EmployeeR\bemployee\"'\n" +
 	"\x15DeleteEmployeeRequest\x12\x0e\n" +
@@ -860,56 +906,58 @@ func file_employee_v1_employee_proto_rawDescGZIP() []byte {
 }
 
 var file_employee_v1_employee_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_employee_v1_employee_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_employee_v1_employee_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_employee_v1_employee_proto_goTypes = []any{
 	(EmployeeStatus)(0),            // 0: employee.v1.EmployeeStatus
 	(*Employee)(nil),               // 1: employee.v1.Employee
-	(*CreateEmployeeRequest)(nil),  // 2: employee.v1.CreateEmployeeRequest
-	(*CreateEmployeeResponse)(nil), // 3: employee.v1.CreateEmployeeResponse
-	(*GetEmployeeRequest)(nil),     // 4: employee.v1.GetEmployeeRequest
-	(*GetEmployeeResponse)(nil),    // 5: employee.v1.GetEmployeeResponse
-	(*ListEmployeesRequest)(nil),   // 6: employee.v1.ListEmployeesRequest
-	(*ListEmployeesResponse)(nil),  // 7: employee.v1.ListEmployeesResponse
-	(*UpdateEmployeeRequest)(nil),  // 8: employee.v1.UpdateEmployeeRequest
-	(*UpdateEmployeeResponse)(nil), // 9: employee.v1.UpdateEmployeeResponse
-	(*DeleteEmployeeRequest)(nil),  // 10: employee.v1.DeleteEmployeeRequest
-	(*DeleteEmployeeResponse)(nil), // 11: employee.v1.DeleteEmployeeResponse
-	(*wrapperspb.StringValue)(nil), // 12: google.protobuf.StringValue
-	(*timestamppb.Timestamp)(nil),  // 13: google.protobuf.Timestamp
+	(*UserSummary)(nil),            // 2: employee.v1.UserSummary
+	(*CreateEmployeeRequest)(nil),  // 3: employee.v1.CreateEmployeeRequest
+	(*CreateEmployeeResponse)(nil), // 4: employee.v1.CreateEmployeeResponse
+	(*GetEmployeeRequest)(nil),     // 5: employee.v1.GetEmployeeRequest
+	(*GetEmployeeResponse)(nil),    // 6: employee.v1.GetEmployeeResponse
+	(*ListEmployeesRequest)(nil),   // 7: employee.v1.ListEmployeesRequest
+	(*ListEmployeesResponse)(nil),  // 8: employee.v1.ListEmployeesResponse
+	(*UpdateEmployeeRequest)(nil),  // 9: employee.v1.UpdateEmployeeRequest
+	(*UpdateEmployeeResponse)(nil), // 10: employee.v1.UpdateEmployeeResponse
+	(*DeleteEmployeeRequest)(nil),  // 11: employee.v1.DeleteEmployeeRequest
+	(*DeleteEmployeeResponse)(nil), // 12: employee.v1.DeleteEmployeeResponse
+	(*wrapperspb.StringValue)(nil), // 13: google.protobuf.StringValue
+	(*timestamppb.Timestamp)(nil),  // 14: google.protobuf.Timestamp
+	(v1.UserStatus)(0),             // 15: user.v1.UserStatus
 }
 var file_employee_v1_employee_proto_depIdxs = []int32{
-	12, // 0: employee.v1.Employee.email:type_name -> google.protobuf.StringValue
-	0,  // 1: employee.v1.Employee.status:type_name -> employee.v1.EmployeeStatus
-	12, // 2: employee.v1.Employee.hired_at:type_name -> google.protobuf.StringValue
-	12, // 3: employee.v1.Employee.terminated_at:type_name -> google.protobuf.StringValue
-	13, // 4: employee.v1.Employee.created_at:type_name -> google.protobuf.Timestamp
-	13, // 5: employee.v1.Employee.updated_at:type_name -> google.protobuf.Timestamp
-	12, // 6: employee.v1.CreateEmployeeRequest.email:type_name -> google.protobuf.StringValue
-	0,  // 7: employee.v1.CreateEmployeeRequest.status:type_name -> employee.v1.EmployeeStatus
-	12, // 8: employee.v1.CreateEmployeeRequest.hired_at:type_name -> google.protobuf.StringValue
-	12, // 9: employee.v1.CreateEmployeeRequest.terminated_at:type_name -> google.protobuf.StringValue
-	1,  // 10: employee.v1.CreateEmployeeResponse.employee:type_name -> employee.v1.Employee
-	1,  // 11: employee.v1.GetEmployeeResponse.employee:type_name -> employee.v1.Employee
-	0,  // 12: employee.v1.ListEmployeesRequest.status:type_name -> employee.v1.EmployeeStatus
-	1,  // 13: employee.v1.ListEmployeesResponse.employees:type_name -> employee.v1.Employee
-	12, // 14: employee.v1.UpdateEmployeeRequest.employee_code:type_name -> google.protobuf.StringValue
-	12, // 15: employee.v1.UpdateEmployeeRequest.email:type_name -> google.protobuf.StringValue
-	12, // 16: employee.v1.UpdateEmployeeRequest.last_name:type_name -> google.protobuf.StringValue
-	12, // 17: employee.v1.UpdateEmployeeRequest.first_name:type_name -> google.protobuf.StringValue
+	0,  // 0: employee.v1.Employee.status:type_name -> employee.v1.EmployeeStatus
+	13, // 1: employee.v1.Employee.hired_at:type_name -> google.protobuf.StringValue
+	13, // 2: employee.v1.Employee.terminated_at:type_name -> google.protobuf.StringValue
+	14, // 3: employee.v1.Employee.created_at:type_name -> google.protobuf.Timestamp
+	14, // 4: employee.v1.Employee.updated_at:type_name -> google.protobuf.Timestamp
+	2,  // 5: employee.v1.Employee.user:type_name -> employee.v1.UserSummary
+	15, // 6: employee.v1.UserSummary.status:type_name -> user.v1.UserStatus
+	14, // 7: employee.v1.UserSummary.created_at:type_name -> google.protobuf.Timestamp
+	14, // 8: employee.v1.UserSummary.updated_at:type_name -> google.protobuf.Timestamp
+	0,  // 9: employee.v1.CreateEmployeeRequest.status:type_name -> employee.v1.EmployeeStatus
+	13, // 10: employee.v1.CreateEmployeeRequest.hired_at:type_name -> google.protobuf.StringValue
+	13, // 11: employee.v1.CreateEmployeeRequest.terminated_at:type_name -> google.protobuf.StringValue
+	1,  // 12: employee.v1.CreateEmployeeResponse.employee:type_name -> employee.v1.Employee
+	1,  // 13: employee.v1.GetEmployeeResponse.employee:type_name -> employee.v1.Employee
+	0,  // 14: employee.v1.ListEmployeesRequest.status:type_name -> employee.v1.EmployeeStatus
+	1,  // 15: employee.v1.ListEmployeesResponse.employees:type_name -> employee.v1.Employee
+	13, // 16: employee.v1.UpdateEmployeeRequest.employee_code:type_name -> google.protobuf.StringValue
+	13, // 17: employee.v1.UpdateEmployeeRequest.user_id:type_name -> google.protobuf.StringValue
 	0,  // 18: employee.v1.UpdateEmployeeRequest.status:type_name -> employee.v1.EmployeeStatus
-	12, // 19: employee.v1.UpdateEmployeeRequest.hired_at:type_name -> google.protobuf.StringValue
-	12, // 20: employee.v1.UpdateEmployeeRequest.terminated_at:type_name -> google.protobuf.StringValue
+	13, // 19: employee.v1.UpdateEmployeeRequest.hired_at:type_name -> google.protobuf.StringValue
+	13, // 20: employee.v1.UpdateEmployeeRequest.terminated_at:type_name -> google.protobuf.StringValue
 	1,  // 21: employee.v1.UpdateEmployeeResponse.employee:type_name -> employee.v1.Employee
-	2,  // 22: employee.v1.EmployeeService.CreateEmployee:input_type -> employee.v1.CreateEmployeeRequest
-	4,  // 23: employee.v1.EmployeeService.GetEmployee:input_type -> employee.v1.GetEmployeeRequest
-	6,  // 24: employee.v1.EmployeeService.ListEmployees:input_type -> employee.v1.ListEmployeesRequest
-	8,  // 25: employee.v1.EmployeeService.UpdateEmployee:input_type -> employee.v1.UpdateEmployeeRequest
-	10, // 26: employee.v1.EmployeeService.DeleteEmployee:input_type -> employee.v1.DeleteEmployeeRequest
-	3,  // 27: employee.v1.EmployeeService.CreateEmployee:output_type -> employee.v1.CreateEmployeeResponse
-	5,  // 28: employee.v1.EmployeeService.GetEmployee:output_type -> employee.v1.GetEmployeeResponse
-	7,  // 29: employee.v1.EmployeeService.ListEmployees:output_type -> employee.v1.ListEmployeesResponse
-	9,  // 30: employee.v1.EmployeeService.UpdateEmployee:output_type -> employee.v1.UpdateEmployeeResponse
-	11, // 31: employee.v1.EmployeeService.DeleteEmployee:output_type -> employee.v1.DeleteEmployeeResponse
+	3,  // 22: employee.v1.EmployeeService.CreateEmployee:input_type -> employee.v1.CreateEmployeeRequest
+	5,  // 23: employee.v1.EmployeeService.GetEmployee:input_type -> employee.v1.GetEmployeeRequest
+	7,  // 24: employee.v1.EmployeeService.ListEmployees:input_type -> employee.v1.ListEmployeesRequest
+	9,  // 25: employee.v1.EmployeeService.UpdateEmployee:input_type -> employee.v1.UpdateEmployeeRequest
+	11, // 26: employee.v1.EmployeeService.DeleteEmployee:input_type -> employee.v1.DeleteEmployeeRequest
+	4,  // 27: employee.v1.EmployeeService.CreateEmployee:output_type -> employee.v1.CreateEmployeeResponse
+	6,  // 28: employee.v1.EmployeeService.GetEmployee:output_type -> employee.v1.GetEmployeeResponse
+	8,  // 29: employee.v1.EmployeeService.ListEmployees:output_type -> employee.v1.ListEmployeesResponse
+	10, // 30: employee.v1.EmployeeService.UpdateEmployee:output_type -> employee.v1.UpdateEmployeeResponse
+	12, // 31: employee.v1.EmployeeService.DeleteEmployee:output_type -> employee.v1.DeleteEmployeeResponse
 	27, // [27:32] is the sub-list for method output_type
 	22, // [22:27] is the sub-list for method input_type
 	22, // [22:22] is the sub-list for extension type_name
@@ -928,7 +976,7 @@ func file_employee_v1_employee_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_employee_v1_employee_proto_rawDesc), len(file_employee_v1_employee_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   11,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

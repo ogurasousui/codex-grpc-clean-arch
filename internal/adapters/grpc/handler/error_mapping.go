@@ -29,9 +29,7 @@ func toStatusError(err error) error {
 		errors.Is(err, employee.ErrInvalidID),
 		errors.Is(err, employee.ErrInvalidCompanyID),
 		errors.Is(err, employee.ErrInvalidEmployeeCode),
-		errors.Is(err, employee.ErrInvalidEmail),
-		errors.Is(err, employee.ErrInvalidLastName),
-		errors.Is(err, employee.ErrInvalidFirstName),
+		errors.Is(err, employee.ErrInvalidUserID),
 		errors.Is(err, employee.ErrInvalidStatus),
 		errors.Is(err, employee.ErrInvalidPageSize),
 		errors.Is(err, employee.ErrInvalidPageToken),
@@ -44,7 +42,8 @@ func toStatusError(err error) error {
 	case errors.Is(err, user.ErrUserNotFound),
 		errors.Is(err, company.ErrCompanyNotFound),
 		errors.Is(err, employee.ErrEmployeeNotFound),
-		errors.Is(err, employee.ErrCompanyNotFound):
+		errors.Is(err, employee.ErrCompanyNotFound),
+		errors.Is(err, employee.ErrUserNotFound):
 		return status.Error(codes.NotFound, err.Error())
 	default:
 		return status.Error(codes.Internal, err.Error())
