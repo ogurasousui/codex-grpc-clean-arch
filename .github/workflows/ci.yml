@@ -78,6 +78,22 @@ jobs:
           CONFIG_PATH: ${{ github.workspace }}/assets/ci.yaml
         run: go run ./cmd/migrate -config "$CONFIG_PATH" up
 
+      - name: Install Atlas CLI
+        run: |
+          curl -sSf https://release.ariga.io/atlas/install.sh | sh
+          chmod +x atlas
+          sudo mv atlas /usr/local/bin/atlas
+
+      - name: Verify schema snapshot
+        env:
+          DATABASE_URL: postgres://app_user:app_password@127.0.0.1:15432/app_db?sslmode=disable
+        run: |
+          atlas schema apply \
+            --url "$DATABASE_URL" \
+            --to file://assets/db/schema.sql \
+            --dev-url docker://postgres/16/dev \
+            --dry-run
+
       - name: Run integration tests
         env:
           CONFIG_PATH: ${{ github.workspace }}/assets/ci.yaml

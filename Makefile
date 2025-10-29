@@ -1,8 +1,13 @@
 CONFIG_PATH ?= assets/local.yaml
 SEED_DIR ?= assets/seeds
 MIGRATE := go run ./cmd/migrate -config $(CONFIG_PATH)
+ATLAS ?= atlas
+ATLAS_ENV ?= local
+SCHEMA_FILE ?= assets/db/schema.sql
+DATABASE_URL ?= postgres://app_user:app_password@localhost:15432/app_db?sslmode=disable
+DEV_URL ?= docker://postgres/16/dev
 
-.PHONY: test test-integration buf-lint buf-generate migrate-up migrate-down migrate-version migrate-drop migrate-seeds-up migrate-seeds-down docker-up docker-down dev-up dev-down fmt tidy ci
+.PHONY: test test-integration buf-lint buf-generate migrate-up migrate-down migrate-version migrate-drop migrate-seeds-up migrate-seeds-down docker-up docker-down dev-up dev-down atlas-diff atlas-apply atlas-inspect fmt tidy ci
 
 ## Run unit tests
 test:
@@ -59,6 +64,18 @@ dev-up:
 ## Stop development server and related containers
 dev-down:
 	docker compose --profile local down
+
+## Show diff between current database and schema.sql using Atlas
+atlas-diff:
+	$(ATLAS) schema diff --from $(DATABASE_URL) --to file://$(SCHEMA_FILE) --dev-url $(DEV_URL)
+
+## Apply schema.sql to the target database using Atlas
+atlas-apply:
+	$(ATLAS) schema apply --url $(DATABASE_URL) --to file://$(SCHEMA_FILE) --dev-url $(DEV_URL) --auto-approve
+
+## Inspect current database and overwrite schema.sql snapshot
+atlas-inspect:
+	$(ATLAS) schema inspect --url $(DATABASE_URL) --format sql > $(SCHEMA_FILE)
 
 ## Format Go files
 fmt:
