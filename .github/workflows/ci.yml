@@ -87,14 +87,24 @@ jobs:
       - name: Verify schema snapshot
         env:
           DATABASE_URL: postgres://app_user:app_password@127.0.0.1:15432/app_db?sslmode=disable
+          ATLAS_NO_UPDATE_CHECK: "true"
         run: |
           set -euo pipefail
-          diff_count=$(atlas schema diff \
+          diff_output=$(atlas schema diff \
             --from "$DATABASE_URL" \
             --to file://assets/db/schema.sql \
             --dev-url docker://postgres/16/dev \
             --format '{{ len .Changes }}')
-          if [ "$diff_count" -ne 0 ]; then
+          diff_count=$(echo "$diff_output" | tail -n 1 | tr -d '[:space:]')
+          if [ -z "$diff_count" ]; then
+            echo "::error::Failed to compute schema diff count" >&2
+            atlas schema diff \
+              --from "$DATABASE_URL" \
+              --to file://assets/db/schema.sql \
+              --dev-url docker://postgres/16/dev
+            exit 1
+          fi
+          if [ "$diff_count" != "0" ]; then
             echo "::error::schema.sql is out of sync with the applied migrations. See the diff below." >&2
             atlas schema diff \
               --from "$DATABASE_URL" \
