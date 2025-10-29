@@ -18,13 +18,15 @@ message Employee {
   string id = 1;
   string company_id = 2;
   string employee_code = 3;
-  string user_id = 4;
-  EmployeeStatus status = 5;
-  google.protobuf.StringValue hired_at = 6;
-  google.protobuf.StringValue terminated_at = 7;
-  google.protobuf.Timestamp created_at = 8;
-  google.protobuf.Timestamp updated_at = 9;
-  UserSummary user = 10;
+  reserved 4, 5, 6;
+  reserved "email", "last_name", "first_name";
+  EmployeeStatus status = 7;
+  google.protobuf.StringValue hired_at = 8;
+  google.protobuf.StringValue terminated_at = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+  string user_id = 12;
+  UserSummary user = 13;
 }
 
 message UserSummary {
@@ -39,10 +41,12 @@ message UserSummary {
 message CreateEmployeeRequest {
   string company_id = 1;
   string employee_code = 2;
-  string user_id = 3;
-  EmployeeStatus status = 4;
-  google.protobuf.StringValue hired_at = 5;
-  google.protobuf.StringValue terminated_at = 6;
+  reserved 3, 4, 5;
+  reserved "email", "last_name", "first_name";
+  EmployeeStatus status = 6;
+  google.protobuf.StringValue hired_at = 7;
+  google.protobuf.StringValue terminated_at = 8;
+  string user_id = 9;
 }
 
 message CreateEmployeeResponse {
@@ -72,10 +76,12 @@ message ListEmployeesResponse {
 message UpdateEmployeeRequest {
   string id = 1;
   google.protobuf.StringValue employee_code = 2;
-  google.protobuf.StringValue user_id = 3;
-  EmployeeStatus status = 4;
-  google.protobuf.StringValue hired_at = 5;
-  google.protobuf.StringValue terminated_at = 6;
+  reserved 3, 4, 5;
+  reserved "email", "last_name", "first_name";
+  EmployeeStatus status = 6;
+  google.protobuf.StringValue hired_at = 7;
+  google.protobuf.StringValue terminated_at = 8;
+  google.protobuf.StringValue user_id = 9;
 }
 
 message UpdateEmployeeResponse {

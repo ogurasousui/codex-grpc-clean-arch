@@ -23,22 +23,24 @@ message Employee {
   string id = 1;
   string company_id = 2;             // 所属会社の UUID
   string employee_code = 3;          // 会社内で一意な社員コード（小文字/数字/ハイフン/アンダースコア）
-  string user_id = 4;                // users テーブルの ID
-  EmployeeStatus status = 5;         // active / inactive
-  google.protobuf.StringValue hired_at = 6;        // YYYY-MM-DD 形式
-  google.protobuf.StringValue terminated_at = 7;   // YYYY-MM-DD 形式
-  google.protobuf.Timestamp created_at = 8;
-  google.protobuf.Timestamp updated_at = 9;
-  UserSummary user = 10;             // レスポンス用のユーザースナップショット（email/name/status）
+  // フィールド 4-6 (email/last_name/first_name) は後方互換のため予約済み
+  EmployeeStatus status = 7;         // active / inactive
+  google.protobuf.StringValue hired_at = 8;        // YYYY-MM-DD 形式
+  google.protobuf.StringValue terminated_at = 9;   // YYYY-MM-DD 形式
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+  string user_id = 12;               // users テーブルの ID
+  UserSummary user = 13;             // レスポンス用のユーザースナップショット（email/name/status）
 }
 
 message CreateEmployeeRequest {
   string company_id = 1;                       // 必須
   string employee_code = 2;                    // 必須・会社内でユニーク
-  string user_id = 3;                          // 必須・users.id を参照
-  EmployeeStatus status = 4;                   // 省略時は active
-  google.protobuf.StringValue hired_at = 5;    // 任意・YYYY-MM-DD
-  google.protobuf.StringValue terminated_at = 6; // 任意・YYYY-MM-DD（hired_at 以降）
+  // フィールド 3-5 (email/last_name/first_name) は後方互換のため予約済み
+  EmployeeStatus status = 6;                   // 省略時は active
+  google.protobuf.StringValue hired_at = 7;    // 任意・YYYY-MM-DD
+  google.protobuf.StringValue terminated_at = 8; // 任意・YYYY-MM-DD（hired_at 以降）
+  string user_id = 9;                          // 必須・users.id を参照
 }
 
 message ListEmployeesRequest {

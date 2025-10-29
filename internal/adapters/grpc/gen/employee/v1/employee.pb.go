@@ -78,13 +78,13 @@ type Employee struct {
 	Id            string                  `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	CompanyId     string                  `protobuf:"bytes,2,opt,name=company_id,json=companyId,proto3" json:"company_id,omitempty"`
 	EmployeeCode  string                  `protobuf:"bytes,3,opt,name=employee_code,json=employeeCode,proto3" json:"employee_code,omitempty"`
-	UserId        string                  `protobuf:"bytes,4,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Status        EmployeeStatus          `protobuf:"varint,5,opt,name=status,proto3,enum=employee.v1.EmployeeStatus" json:"status,omitempty"`
-	HiredAt       *wrapperspb.StringValue `protobuf:"bytes,6,opt,name=hired_at,json=hiredAt,proto3" json:"hired_at,omitempty"`
-	TerminatedAt  *wrapperspb.StringValue `protobuf:"bytes,7,opt,name=terminated_at,json=terminatedAt,proto3" json:"terminated_at,omitempty"`
-	CreatedAt     *timestamppb.Timestamp  `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     *timestamppb.Timestamp  `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	User          *UserSummary            `protobuf:"bytes,10,opt,name=user,proto3" json:"user,omitempty"`
+	Status        EmployeeStatus          `protobuf:"varint,7,opt,name=status,proto3,enum=employee.v1.EmployeeStatus" json:"status,omitempty"`
+	HiredAt       *wrapperspb.StringValue `protobuf:"bytes,8,opt,name=hired_at,json=hiredAt,proto3" json:"hired_at,omitempty"`
+	TerminatedAt  *wrapperspb.StringValue `protobuf:"bytes,9,opt,name=terminated_at,json=terminatedAt,proto3" json:"terminated_at,omitempty"`
+	CreatedAt     *timestamppb.Timestamp  `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp  `protobuf:"bytes,11,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	UserId        string                  `protobuf:"bytes,12,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	User          *UserSummary            `protobuf:"bytes,13,opt,name=user,proto3" json:"user,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -140,13 +140,6 @@ func (x *Employee) GetEmployeeCode() string {
 	return ""
 }
 
-func (x *Employee) GetUserId() string {
-	if x != nil {
-		return x.UserId
-	}
-	return ""
-}
-
 func (x *Employee) GetStatus() EmployeeStatus {
 	if x != nil {
 		return x.Status
@@ -180,6 +173,13 @@ func (x *Employee) GetUpdatedAt() *timestamppb.Timestamp {
 		return x.UpdatedAt
 	}
 	return nil
+}
+
+func (x *Employee) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
 }
 
 func (x *Employee) GetUser() *UserSummary {
@@ -277,10 +277,10 @@ type CreateEmployeeRequest struct {
 	state         protoimpl.MessageState  `protogen:"open.v1"`
 	CompanyId     string                  `protobuf:"bytes,1,opt,name=company_id,json=companyId,proto3" json:"company_id,omitempty"`
 	EmployeeCode  string                  `protobuf:"bytes,2,opt,name=employee_code,json=employeeCode,proto3" json:"employee_code,omitempty"`
-	UserId        string                  `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Status        EmployeeStatus          `protobuf:"varint,4,opt,name=status,proto3,enum=employee.v1.EmployeeStatus" json:"status,omitempty"`
-	HiredAt       *wrapperspb.StringValue `protobuf:"bytes,5,opt,name=hired_at,json=hiredAt,proto3" json:"hired_at,omitempty"`
-	TerminatedAt  *wrapperspb.StringValue `protobuf:"bytes,6,opt,name=terminated_at,json=terminatedAt,proto3" json:"terminated_at,omitempty"`
+	Status        EmployeeStatus          `protobuf:"varint,6,opt,name=status,proto3,enum=employee.v1.EmployeeStatus" json:"status,omitempty"`
+	HiredAt       *wrapperspb.StringValue `protobuf:"bytes,7,opt,name=hired_at,json=hiredAt,proto3" json:"hired_at,omitempty"`
+	TerminatedAt  *wrapperspb.StringValue `protobuf:"bytes,8,opt,name=terminated_at,json=terminatedAt,proto3" json:"terminated_at,omitempty"`
+	UserId        string                  `protobuf:"bytes,9,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -329,13 +329,6 @@ func (x *CreateEmployeeRequest) GetEmployeeCode() string {
 	return ""
 }
 
-func (x *CreateEmployeeRequest) GetUserId() string {
-	if x != nil {
-		return x.UserId
-	}
-	return ""
-}
-
 func (x *CreateEmployeeRequest) GetStatus() EmployeeStatus {
 	if x != nil {
 		return x.Status
@@ -355,6 +348,13 @@ func (x *CreateEmployeeRequest) GetTerminatedAt() *wrapperspb.StringValue {
 		return x.TerminatedAt
 	}
 	return nil
+}
+
+func (x *CreateEmployeeRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
 }
 
 type CreateEmployeeResponse struct {
@@ -613,10 +613,10 @@ type UpdateEmployeeRequest struct {
 	state         protoimpl.MessageState  `protogen:"open.v1"`
 	Id            string                  `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	EmployeeCode  *wrapperspb.StringValue `protobuf:"bytes,2,opt,name=employee_code,json=employeeCode,proto3" json:"employee_code,omitempty"`
-	UserId        *wrapperspb.StringValue `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Status        EmployeeStatus          `protobuf:"varint,4,opt,name=status,proto3,enum=employee.v1.EmployeeStatus" json:"status,omitempty"`
-	HiredAt       *wrapperspb.StringValue `protobuf:"bytes,5,opt,name=hired_at,json=hiredAt,proto3" json:"hired_at,omitempty"`
-	TerminatedAt  *wrapperspb.StringValue `protobuf:"bytes,6,opt,name=terminated_at,json=terminatedAt,proto3" json:"terminated_at,omitempty"`
+	Status        EmployeeStatus          `protobuf:"varint,6,opt,name=status,proto3,enum=employee.v1.EmployeeStatus" json:"status,omitempty"`
+	HiredAt       *wrapperspb.StringValue `protobuf:"bytes,7,opt,name=hired_at,json=hiredAt,proto3" json:"hired_at,omitempty"`
+	TerminatedAt  *wrapperspb.StringValue `protobuf:"bytes,8,opt,name=terminated_at,json=terminatedAt,proto3" json:"terminated_at,omitempty"`
+	UserId        *wrapperspb.StringValue `protobuf:"bytes,9,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -665,13 +665,6 @@ func (x *UpdateEmployeeRequest) GetEmployeeCode() *wrapperspb.StringValue {
 	return nil
 }
 
-func (x *UpdateEmployeeRequest) GetUserId() *wrapperspb.StringValue {
-	if x != nil {
-		return x.UserId
-	}
-	return nil
-}
-
 func (x *UpdateEmployeeRequest) GetStatus() EmployeeStatus {
 	if x != nil {
 		return x.Status
@@ -689,6 +682,13 @@ func (x *UpdateEmployeeRequest) GetHiredAt() *wrapperspb.StringValue {
 func (x *UpdateEmployeeRequest) GetTerminatedAt() *wrapperspb.StringValue {
 	if x != nil {
 		return x.TerminatedAt
+	}
+	return nil
+}
+
+func (x *UpdateEmployeeRequest) GetUserId() *wrapperspb.StringValue {
+	if x != nil {
+		return x.UserId
 	}
 	return nil
 }
@@ -821,22 +821,23 @@ var File_employee_v1_employee_proto protoreflect.FileDescriptor
 
 const file_employee_v1_employee_proto_rawDesc = "" +
 	"\n" +
-	"\x1aemployee/v1/employee.proto\x12\vemployee.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/wrappers.proto\x1a\x12user/v1/user.proto\"\xcc\x03\n" +
+	"\x1aemployee/v1/employee.proto\x12\vemployee.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/wrappers.proto\x1a\x12user/v1/user.proto\"\xfc\x03\n" +
 	"\bEmployee\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
 	"company_id\x18\x02 \x01(\tR\tcompanyId\x12#\n" +
-	"\remployee_code\x18\x03 \x01(\tR\femployeeCode\x12\x17\n" +
-	"\auser_id\x18\x04 \x01(\tR\x06userId\x123\n" +
-	"\x06status\x18\x05 \x01(\x0e2\x1b.employee.v1.EmployeeStatusR\x06status\x127\n" +
-	"\bhired_at\x18\x06 \x01(\v2\x1c.google.protobuf.StringValueR\ahiredAt\x12A\n" +
-	"\rterminated_at\x18\a \x01(\v2\x1c.google.protobuf.StringValueR\fterminatedAt\x129\n" +
+	"\remployee_code\x18\x03 \x01(\tR\femployeeCode\x123\n" +
+	"\x06status\x18\a \x01(\x0e2\x1b.employee.v1.EmployeeStatusR\x06status\x127\n" +
+	"\bhired_at\x18\b \x01(\v2\x1c.google.protobuf.StringValueR\ahiredAt\x12A\n" +
+	"\rterminated_at\x18\t \x01(\v2\x1c.google.protobuf.StringValueR\fterminatedAt\x129\n" +
 	"\n" +
-	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"created_at\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12,\n" +
-	"\x04user\x18\n" +
-	" \x01(\v2\x18.employee.v1.UserSummaryR\x04user\"\xea\x01\n" +
+	"updated_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12\x17\n" +
+	"\auser_id\x18\f \x01(\tR\x06userId\x12,\n" +
+	"\x04user\x18\r \x01(\v2\x18.employee.v1.UserSummaryR\x04userJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06J\x04\b\x06\x10\aR\x05emailR\tlast_nameR\n" +
+	"first_name\"\xea\x01\n" +
 	"\vUserSummary\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x12\n" +
@@ -845,15 +846,16 @@ const file_employee_v1_employee_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xa5\x02\n" +
+	"updated_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xd5\x02\n" +
 	"\x15CreateEmployeeRequest\x12\x1d\n" +
 	"\n" +
 	"company_id\x18\x01 \x01(\tR\tcompanyId\x12#\n" +
-	"\remployee_code\x18\x02 \x01(\tR\femployeeCode\x12\x17\n" +
-	"\auser_id\x18\x03 \x01(\tR\x06userId\x123\n" +
-	"\x06status\x18\x04 \x01(\x0e2\x1b.employee.v1.EmployeeStatusR\x06status\x127\n" +
-	"\bhired_at\x18\x05 \x01(\v2\x1c.google.protobuf.StringValueR\ahiredAt\x12A\n" +
-	"\rterminated_at\x18\x06 \x01(\v2\x1c.google.protobuf.StringValueR\fterminatedAt\"K\n" +
+	"\remployee_code\x18\x02 \x01(\tR\femployeeCode\x123\n" +
+	"\x06status\x18\x06 \x01(\x0e2\x1b.employee.v1.EmployeeStatusR\x06status\x127\n" +
+	"\bhired_at\x18\a \x01(\v2\x1c.google.protobuf.StringValueR\ahiredAt\x12A\n" +
+	"\rterminated_at\x18\b \x01(\v2\x1c.google.protobuf.StringValueR\fterminatedAt\x12\x17\n" +
+	"\auser_id\x18\t \x01(\tR\x06userIdJ\x04\b\x03\x10\x04J\x04\b\x04\x10\x05J\x04\b\x05\x10\x06R\x05emailR\tlast_nameR\n" +
+	"first_name\"K\n" +
 	"\x16CreateEmployeeResponse\x121\n" +
 	"\bemployee\x18\x01 \x01(\v2\x15.employee.v1.EmployeeR\bemployee\"$\n" +
 	"\x12GetEmployeeRequest\x12\x0e\n" +
@@ -869,14 +871,15 @@ const file_employee_v1_employee_proto_rawDesc = "" +
 	"\x06status\x18\x04 \x01(\x0e2\x1b.employee.v1.EmployeeStatusR\x06status\"t\n" +
 	"\x15ListEmployeesResponse\x123\n" +
 	"\temployees\x18\x01 \x03(\v2\x15.employee.v1.EmployeeR\temployees\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xd2\x02\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\x82\x03\n" +
 	"\x15UpdateEmployeeRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12A\n" +
-	"\remployee_code\x18\x02 \x01(\v2\x1c.google.protobuf.StringValueR\femployeeCode\x125\n" +
-	"\auser_id\x18\x03 \x01(\v2\x1c.google.protobuf.StringValueR\x06userId\x123\n" +
-	"\x06status\x18\x04 \x01(\x0e2\x1b.employee.v1.EmployeeStatusR\x06status\x127\n" +
-	"\bhired_at\x18\x05 \x01(\v2\x1c.google.protobuf.StringValueR\ahiredAt\x12A\n" +
-	"\rterminated_at\x18\x06 \x01(\v2\x1c.google.protobuf.StringValueR\fterminatedAt\"K\n" +
+	"\remployee_code\x18\x02 \x01(\v2\x1c.google.protobuf.StringValueR\femployeeCode\x123\n" +
+	"\x06status\x18\x06 \x01(\x0e2\x1b.employee.v1.EmployeeStatusR\x06status\x127\n" +
+	"\bhired_at\x18\a \x01(\v2\x1c.google.protobuf.StringValueR\ahiredAt\x12A\n" +
+	"\rterminated_at\x18\b \x01(\v2\x1c.google.protobuf.StringValueR\fterminatedAt\x125\n" +
+	"\auser_id\x18\t \x01(\v2\x1c.google.protobuf.StringValueR\x06userIdJ\x04\b\x03\x10\x04J\x04\b\x04\x10\x05J\x04\b\x05\x10\x06R\x05emailR\tlast_nameR\n" +
+	"first_name\"K\n" +
 	"\x16UpdateEmployeeResponse\x121\n" +
 	"\bemployee\x18\x01 \x01(\v2\x15.employee.v1.EmployeeR\bemployee\"'\n" +
 	"\x15DeleteEmployeeRequest\x12\x0e\n" +
@@ -943,10 +946,10 @@ var file_employee_v1_employee_proto_depIdxs = []int32{
 	0,  // 14: employee.v1.ListEmployeesRequest.status:type_name -> employee.v1.EmployeeStatus
 	1,  // 15: employee.v1.ListEmployeesResponse.employees:type_name -> employee.v1.Employee
 	13, // 16: employee.v1.UpdateEmployeeRequest.employee_code:type_name -> google.protobuf.StringValue
-	13, // 17: employee.v1.UpdateEmployeeRequest.user_id:type_name -> google.protobuf.StringValue
-	0,  // 18: employee.v1.UpdateEmployeeRequest.status:type_name -> employee.v1.EmployeeStatus
-	13, // 19: employee.v1.UpdateEmployeeRequest.hired_at:type_name -> google.protobuf.StringValue
-	13, // 20: employee.v1.UpdateEmployeeRequest.terminated_at:type_name -> google.protobuf.StringValue
+	0,  // 17: employee.v1.UpdateEmployeeRequest.status:type_name -> employee.v1.EmployeeStatus
+	13, // 18: employee.v1.UpdateEmployeeRequest.hired_at:type_name -> google.protobuf.StringValue
+	13, // 19: employee.v1.UpdateEmployeeRequest.terminated_at:type_name -> google.protobuf.StringValue
+	13, // 20: employee.v1.UpdateEmployeeRequest.user_id:type_name -> google.protobuf.StringValue
 	1,  // 21: employee.v1.UpdateEmployeeResponse.employee:type_name -> employee.v1.Employee
 	3,  // 22: employee.v1.EmployeeService.CreateEmployee:input_type -> employee.v1.CreateEmployeeRequest
 	5,  // 23: employee.v1.EmployeeService.GetEmployee:input_type -> employee.v1.GetEmployeeRequest
