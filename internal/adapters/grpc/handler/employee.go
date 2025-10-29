@@ -7,6 +7,7 @@ import (
 	"time"
 
 	employeepb "github.com/ogurasousui/codex-grpc-clean-arch/internal/adapters/grpc/gen/employee/v1"
+	userpb "github.com/ogurasousui/codex-grpc-clean-arch/internal/adapters/grpc/gen/user/v1"
 	"github.com/ogurasousui/codex-grpc-clean-arch/internal/core/employee"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -33,7 +34,9 @@ func (h *EmployeeGrpcHandler) CreateEmployee(ctx context.Context, req *employeep
 		return nil, status.Error(codes.InvalidArgument, "request is required")
 	}
 
-	emailPtr := optionalString(req.Email)
+	if strings.TrimSpace(req.GetUserId()) == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
 
 	hiredAt, err := parseDateValue(req.HiredAt)
 	if err != nil {
@@ -57,9 +60,7 @@ func (h *EmployeeGrpcHandler) CreateEmployee(ctx context.Context, req *employeep
 	created, err := h.svc.CreateEmployee(ctx, employee.CreateEmployeeInput{
 		CompanyID:    req.GetCompanyId(),
 		EmployeeCode: req.GetEmployeeCode(),
-		Email:        emailPtr,
-		LastName:     req.GetLastName(),
-		FirstName:    req.GetFirstName(),
+		UserID:       req.GetUserId(),
 		Status:       statusPtr,
 		HiredAt:      hiredAt,
 		TerminatedAt: terminatedAt,
@@ -83,18 +84,10 @@ func (h *EmployeeGrpcHandler) UpdateEmployee(ctx context.Context, req *employeep
 		codePtr = &value
 	}
 
-	emailPtr := optionalString(req.Email)
-
-	var lastNamePtr *string
-	if req.LastName != nil {
-		value := req.LastName.GetValue()
-		lastNamePtr = &value
-	}
-
-	var firstNamePtr *string
-	if req.FirstName != nil {
-		value := req.FirstName.GetValue()
-		firstNamePtr = &value
+	var userIDPtr *string
+	if req.UserId != nil {
+		value := req.UserId.GetValue()
+		userIDPtr = &value
 	}
 
 	var statusPtr *employee.Status
@@ -119,9 +112,7 @@ func (h *EmployeeGrpcHandler) UpdateEmployee(ctx context.Context, req *employeep
 	updated, err := h.svc.UpdateEmployee(ctx, employee.UpdateEmployeeInput{
 		ID:              req.GetId(),
 		EmployeeCode:    codePtr,
-		Email:           emailPtr,
-		LastName:        lastNamePtr,
-		FirstName:       firstNamePtr,
+		UserID:          userIDPtr,
 		Status:          statusPtr,
 		HiredAt:         hiredAt,
 		HiredAtSet:      hiredSet,
@@ -207,14 +198,13 @@ func toProtoEmployee(emp *employee.Employee) *employeepb.Employee {
 		Id:           emp.ID,
 		CompanyId:    emp.CompanyID,
 		EmployeeCode: emp.EmployeeCode,
-		Email:        stringPointerToWrapper(emp.Email),
-		LastName:     emp.LastName,
-		FirstName:    emp.FirstName,
+		UserId:       emp.UserID,
 		Status:       toEmployeeProtoStatus(emp.Status),
 		HiredAt:      timePointerToWrapper(emp.HiredAt),
 		TerminatedAt: timePointerToWrapper(emp.TerminatedAt),
 		CreatedAt:    timestamppb.New(emp.CreatedAt),
 		UpdatedAt:    timestamppb.New(emp.UpdatedAt),
+		User:         toProtoUserSummary(emp.User),
 	}
 }
 
@@ -242,19 +232,19 @@ func toEmployeeDomainStatus(status employeepb.EmployeeStatus) (employee.Status, 
 	}
 }
 
-func optionalString(value *wrapperspb.StringValue) *string {
-	if value == nil {
+func toProtoUserSummary(snapshot *employee.UserSnapshot) *employeepb.UserSummary {
+	if snapshot == nil {
 		return nil
 	}
-	str := value.GetValue()
-	return &str
-}
 
-func stringPointerToWrapper(value *string) *wrapperspb.StringValue {
-	if value == nil {
-		return nil
+	return &employeepb.UserSummary{
+		Id:        snapshot.ID,
+		Email:     snapshot.Email,
+		Name:      snapshot.Name,
+		Status:    toUserProtoStatus(snapshot.Status),
+		CreatedAt: timestamppb.New(snapshot.CreatedAt),
+		UpdatedAt: timestamppb.New(snapshot.UpdatedAt),
 	}
-	return wrapperspb.String(*value)
 }
 
 func timePointerToWrapper(value *time.Time) *wrapperspb.StringValue {
@@ -292,4 +282,15 @@ func parseDateUpdateValue(value *wrapperspb.StringValue) (*time.Time, bool, erro
 		return nil, false, fmt.Errorf("invalid format, expected YYYY-MM-DD")
 	}
 	return &t, true, nil
+}
+
+func toUserProtoStatus(status string) userpb.UserStatus {
+	switch strings.ToLower(status) {
+	case "active":
+		return userpb.UserStatus_USER_STATUS_ACTIVE
+	case "inactive":
+		return userpb.UserStatus_USER_STATUS_INACTIVE
+	default:
+		return userpb.UserStatus_USER_STATUS_UNSPECIFIED
+	}
 }

@@ -34,15 +34,19 @@ func NewEmployeeRepository(pool pgdb.Queryer) *EmployeeRepository {
 func (r *EmployeeRepository) Create(ctx context.Context, e *employee.Employee) (*employee.Employee, error) {
 	exec := pgdb.QueryerFromContext(ctx, r.pool)
 	row := exec.QueryRow(ctx, `
-        INSERT INTO employees (company_id, employee_code, email, last_name, first_name, status, hired_at, terminated_at, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-        RETURNING id, company_id, employee_code, email, last_name, first_name, status, hired_at, terminated_at, created_at, updated_at
+        WITH inserted AS (
+            INSERT INTO employees (company_id, employee_code, user_id, status, hired_at, terminated_at, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING id, company_id, employee_code, user_id, status, hired_at, terminated_at, created_at, updated_at
+        )
+        SELECT i.id, i.company_id, i.employee_code, i.user_id, i.status, i.hired_at, i.terminated_at, i.created_at, i.updated_at,
+               u.id, u.email, u.name, u.status, u.created_at, u.updated_at
+          FROM inserted i
+          JOIN users u ON u.id = i.user_id
     `,
 		e.CompanyID,
 		e.EmployeeCode,
-		nullableString(e.Email),
-		e.LastName,
-		e.FirstName,
+		e.UserID,
 		string(e.Status),
 		nullableTime(e.HiredAt),
 		nullableTime(e.TerminatedAt),
@@ -61,22 +65,24 @@ func (r *EmployeeRepository) Create(ctx context.Context, e *employee.Employee) (
 func (r *EmployeeRepository) Update(ctx context.Context, e *employee.Employee) (*employee.Employee, error) {
 	exec := pgdb.QueryerFromContext(ctx, r.pool)
 	row := exec.QueryRow(ctx, `
-        UPDATE employees
-           SET employee_code = $1,
-               email = $2,
-               last_name = $3,
-               first_name = $4,
-               status = $5,
-               hired_at = $6,
-               terminated_at = $7,
-               updated_at = $8
-         WHERE id = $9
-        RETURNING id, company_id, employee_code, email, last_name, first_name, status, hired_at, terminated_at, created_at, updated_at
+        WITH updated AS (
+            UPDATE employees
+               SET employee_code = $1,
+                   user_id = $2,
+                   status = $3,
+                   hired_at = $4,
+                   terminated_at = $5,
+                   updated_at = $6
+             WHERE id = $7
+            RETURNING id, company_id, employee_code, user_id, status, hired_at, terminated_at, created_at, updated_at
+        )
+        SELECT urow.id, urow.company_id, urow.employee_code, urow.user_id, urow.status, urow.hired_at, urow.terminated_at, urow.created_at, urow.updated_at,
+               usr.id, usr.email, usr.name, usr.status, usr.created_at, usr.updated_at
+          FROM updated urow
+          JOIN users usr ON usr.id = urow.user_id
     `,
 		e.EmployeeCode,
-		nullableString(e.Email),
-		e.LastName,
-		e.FirstName,
+		e.UserID,
 		string(e.Status),
 		nullableTime(e.HiredAt),
 		nullableTime(e.TerminatedAt),
@@ -108,9 +114,24 @@ func (r *EmployeeRepository) Delete(ctx context.Context, id string) error {
 func (r *EmployeeRepository) FindByID(ctx context.Context, id string) (*employee.Employee, error) {
 	exec := pgdb.QueryerFromContext(ctx, r.pool)
 	row := exec.QueryRow(ctx, `
-        SELECT id, company_id, employee_code, email, last_name, first_name, status, hired_at, terminated_at, created_at, updated_at
-          FROM employees
-         WHERE id = $1
+        SELECT e.id,
+               e.company_id,
+               e.employee_code,
+               e.user_id,
+               e.status,
+               e.hired_at,
+               e.terminated_at,
+               e.created_at,
+               e.updated_at,
+               u.id,
+               u.email,
+               u.name,
+               u.status,
+               u.created_at,
+               u.updated_at
+          FROM employees e
+          JOIN users u ON u.id = e.user_id
+         WHERE e.id = $1
          LIMIT 1
     `, id)
 
@@ -125,9 +146,24 @@ func (r *EmployeeRepository) FindByID(ctx context.Context, id string) (*employee
 func (r *EmployeeRepository) FindByCompanyAndCode(ctx context.Context, companyID, employeeCode string) (*employee.Employee, error) {
 	exec := pgdb.QueryerFromContext(ctx, r.pool)
 	row := exec.QueryRow(ctx, `
-        SELECT id, company_id, employee_code, email, last_name, first_name, status, hired_at, terminated_at, created_at, updated_at
-          FROM employees
-         WHERE company_id = $1 AND employee_code = $2
+        SELECT e.id,
+               e.company_id,
+               e.employee_code,
+               e.user_id,
+               e.status,
+               e.hired_at,
+               e.terminated_at,
+               e.created_at,
+               e.updated_at,
+               u.id,
+               u.email,
+               u.name,
+               u.status,
+               u.created_at,
+               u.updated_at
+          FROM employees e
+          JOIN users u ON u.id = e.user_id
+         WHERE e.company_id = $1 AND e.employee_code = $2
          LIMIT 1
     `, companyID, employeeCode)
 
@@ -156,12 +192,12 @@ func (r *EmployeeRepository) List(ctx context.Context, filter employee.ListEmplo
 	conditions := make([]string, 0, 2)
 
 	companyPlaceholder := "$" + strconv.Itoa(len(args)+1)
-	conditions = append(conditions, "company_id = "+companyPlaceholder)
+	conditions = append(conditions, "e.company_id = "+companyPlaceholder)
 	args = append(args, filter.CompanyID)
 
 	if filter.Status != nil {
 		placeholder := "$" + strconv.Itoa(len(args)+1)
-		conditions = append(conditions, "status = "+placeholder)
+		conditions = append(conditions, "e.status = "+placeholder)
 		args = append(args, string(*filter.Status))
 	}
 
@@ -176,9 +212,24 @@ func (r *EmployeeRepository) List(ctx context.Context, filter employee.ListEmplo
 	args = append(args, filter.Offset)
 
 	query := `
-        SELECT id, company_id, employee_code, email, last_name, first_name, status, hired_at, terminated_at, created_at, updated_at
-          FROM employees` + whereClause + `
-         ORDER BY created_at DESC, id DESC
+        SELECT e.id,
+               e.company_id,
+               e.employee_code,
+               e.user_id,
+               e.status,
+               e.hired_at,
+               e.terminated_at,
+               e.created_at,
+               e.updated_at,
+               u.id,
+               u.email,
+               u.name,
+               u.status,
+               u.created_at,
+               u.updated_at
+          FROM employees e
+          JOIN users u ON u.id = e.user_id` + whereClause + `
+         ORDER BY e.created_at DESC, e.id DESC
          LIMIT ` + limitPlaceholder + `
         OFFSET ` + offsetPlaceholder + `
     `
@@ -217,27 +268,41 @@ func scanEmployee(row pgx.Row) (*employee.Employee, error) {
 		id           string
 		companyID    string
 		code         string
-		email        sql.NullString
-		lastName     string
-		firstName    string
+		userID       string
 		status       string
 		hiredAt      sql.NullTime
 		terminatedAt sql.NullTime
 		createdAt    time.Time
 		updatedAt    time.Time
+		userJoinedID string
+		userEmail    string
+		userName     string
+		userStatus   string
+		userCreated  time.Time
+		userUpdated  time.Time
 	)
 
-	if err := row.Scan(&id, &companyID, &code, &email, &lastName, &firstName, &status, &hiredAt, &terminatedAt, &createdAt, &updatedAt); err != nil {
+	if err := row.Scan(
+		&id,
+		&companyID,
+		&code,
+		&userID,
+		&status,
+		&hiredAt,
+		&terminatedAt,
+		&createdAt,
+		&updatedAt,
+		&userJoinedID,
+		&userEmail,
+		&userName,
+		&userStatus,
+		&userCreated,
+		&userUpdated,
+	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, employee.ErrEmployeeNotFound
 		}
 		return nil, err
-	}
-
-	var emailPtr *string
-	if email.Valid {
-		value := email.String
-		emailPtr = &value
 	}
 
 	var hiredPtr *time.Time
@@ -258,14 +323,20 @@ func scanEmployee(row pgx.Row) (*employee.Employee, error) {
 		ID:           id,
 		CompanyID:    companyID,
 		EmployeeCode: code,
-		Email:        emailPtr,
-		LastName:     lastName,
-		FirstName:    firstName,
+		UserID:       userID,
 		Status:       employee.Status(status),
 		HiredAt:      hiredPtr,
 		TerminatedAt: terminatedPtr,
 		CreatedAt:    createdAt,
 		UpdatedAt:    updatedAt,
+		User: &employee.UserSnapshot{
+			ID:        userJoinedID,
+			Email:     userEmail,
+			Name:      userName,
+			Status:    userStatus,
+			CreatedAt: userCreated,
+			UpdatedAt: userUpdated,
+		},
 	}, nil
 }
 
@@ -283,7 +354,14 @@ func translateEmployeePgError(err error) error {
 		case employeeUniqueViolationCode:
 			return employee.ErrEmployeeCodeAlreadyExists
 		case employeeForeignKeyViolationCode:
-			return employee.ErrCompanyNotFound
+			switch pgErr.ConstraintName {
+			case "employees_company_id_fkey":
+				return employee.ErrCompanyNotFound
+			case "employees_user_id_fkey":
+				return employee.ErrUserNotFound
+			default:
+				return err
+			}
 		case employeeCheckViolationCode:
 			return employee.ErrInvalidDateRange
 		}

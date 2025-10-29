@@ -26,37 +26,41 @@ func TestScanEmployee_Success(t *testing.T) {
 	t.Parallel()
 
 	email := "user@example.com"
+	userID := "11111111-1111-1111-1111-111111111111"
 	hired := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	terminated := time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC)
 	createdAt := time.Now().UTC()
 	updatedAt := createdAt.Add(time.Minute)
+	userCreated := createdAt.Add(-time.Hour)
+	userUpdated := updatedAt
 
 	row := stubEmployeeRow{scanFn: func(dest ...interface{}) error {
-		if len(dest) != 11 {
+		if len(dest) != 15 {
 			return errors.New("unexpected dest length")
 		}
 		*(dest[0].(*string)) = "emp-1"
 		*(dest[1].(*string)) = "company-1"
 		*(dest[2].(*string)) = "emp-001"
+		*(dest[3].(*string)) = userID
+		*(dest[4].(*string)) = string(employee.StatusActive)
 
-		emailDest := dest[3].(*sql.NullString)
-		emailDest.String = email
-		emailDest.Valid = true
-
-		*(dest[4].(*string)) = "Yamada"
-		*(dest[5].(*string)) = "Taro"
-		*(dest[6].(*string)) = string(employee.StatusActive)
-
-		hiredDest := dest[7].(*sql.NullTime)
+		hiredDest := dest[5].(*sql.NullTime)
 		hiredDest.Time = hired
 		hiredDest.Valid = true
 
-		termDest := dest[8].(*sql.NullTime)
+		termDest := dest[6].(*sql.NullTime)
 		termDest.Time = terminated
 		termDest.Valid = true
 
-		*(dest[9].(*time.Time)) = createdAt
-		*(dest[10].(*time.Time)) = updatedAt
+		*(dest[7].(*time.Time)) = createdAt
+		*(dest[8].(*time.Time)) = updatedAt
+
+		*(dest[9].(*string)) = userID
+		*(dest[10].(*string)) = email
+		*(dest[11].(*string)) = "Taro Yamada"
+		*(dest[12].(*string)) = "active"
+		*(dest[13].(*time.Time)) = userCreated
+		*(dest[14].(*time.Time)) = userUpdated
 		return nil
 	}}
 
@@ -65,8 +69,11 @@ func TestScanEmployee_Success(t *testing.T) {
 		t.Fatalf("scanEmployee returned error: %v", err)
 	}
 
-	if emp.Email == nil || *emp.Email != email {
-		t.Fatalf("expected email %s, got %+v", email, emp.Email)
+	if emp.UserID != userID {
+		t.Fatalf("expected user id %s, got %s", userID, emp.UserID)
+	}
+	if emp.User == nil || emp.User.Email != email {
+		t.Fatalf("expected user snapshot email %s", email)
 	}
 	if emp.HiredAt == nil || !emp.HiredAt.Equal(hired) {
 		t.Fatalf("expected hired date, got %+v", emp.HiredAt)
@@ -97,9 +104,14 @@ func TestTranslateEmployeePgError(t *testing.T) {
 		t.Fatalf("expected unique violation to map to ErrEmployeeCodeAlreadyExists")
 	}
 
-	fkErr := &pgconn.PgError{Code: employeeForeignKeyViolationCode}
-	if !errors.Is(translateEmployeePgError(fkErr), employee.ErrCompanyNotFound) {
+	fkCompanyErr := &pgconn.PgError{Code: employeeForeignKeyViolationCode, ConstraintName: "employees_company_id_fkey"}
+	if !errors.Is(translateEmployeePgError(fkCompanyErr), employee.ErrCompanyNotFound) {
 		t.Fatalf("expected fk violation to map to ErrCompanyNotFound")
+	}
+
+	fkUserErr := &pgconn.PgError{Code: employeeForeignKeyViolationCode, ConstraintName: "employees_user_id_fkey"}
+	if !errors.Is(translateEmployeePgError(fkUserErr), employee.ErrUserNotFound) {
+		t.Fatalf("expected user fk violation to map to ErrUserNotFound")
 	}
 
 	checkErr := &pgconn.PgError{Code: employeeCheckViolationCode}
@@ -126,18 +138,38 @@ func TestEmployeeRepository_List_WithFilters(t *testing.T) {
 	status := employee.StatusActive
 
 	query := regexp.QuoteMeta(`
-        SELECT id, company_id, employee_code, email, last_name, first_name, status, hired_at, terminated_at, created_at, updated_at
-          FROM employees WHERE company_id = $1 AND status = $2
-         ORDER BY created_at DESC, id DESC
+        SELECT e.id,
+               e.company_id,
+               e.employee_code,
+               e.user_id,
+               e.status,
+               e.hired_at,
+               e.terminated_at,
+               e.created_at,
+               e.updated_at,
+               u.id,
+               u.email,
+               u.name,
+               u.status,
+               u.created_at,
+               u.updated_at
+          FROM employees e
+          JOIN users u ON u.id = e.user_id WHERE e.company_id = $1 AND e.status = $2
+         ORDER BY e.created_at DESC, e.id DESC
          LIMIT $3
         OFFSET $4
     `)
 
 	now := time.Now().UTC()
-	rows := pgxmock.NewRows([]string{"id", "company_id", "employee_code", "email", "last_name", "first_name", "status", "hired_at", "terminated_at", "created_at", "updated_at"}).
-		AddRow("emp-1", "company-1", "emp-1", nil, "Yamada", "Taro", string(employee.StatusActive), nil, nil, now, now).
-		AddRow("emp-2", "company-1", "emp-2", nil, "Sato", "Hanako", string(employee.StatusActive), nil, nil, now, now).
-		AddRow("emp-3", "company-1", "emp-3", nil, "Suzuki", "Ichiro", string(employee.StatusInactive), nil, nil, now, now)
+	userIDs := []string{
+		"11111111-1111-1111-1111-111111111111",
+		"22222222-2222-2222-2222-222222222222",
+		"33333333-3333-3333-3333-333333333333",
+	}
+	rows := pgxmock.NewRows([]string{"id", "company_id", "employee_code", "user_id", "status", "hired_at", "terminated_at", "created_at", "updated_at", "user_id_join", "user_email", "user_name", "user_status", "user_created_at", "user_updated_at"}).
+		AddRow("emp-1", "company-1", "emp-1", userIDs[0], string(employee.StatusActive), nil, nil, now, now, userIDs[0], "user1@example.com", "User One", "active", now, now).
+		AddRow("emp-2", "company-1", "emp-2", userIDs[1], string(employee.StatusActive), nil, nil, now, now, userIDs[1], "user2@example.com", "User Two", "active", now, now).
+		AddRow("emp-3", "company-1", "emp-3", userIDs[2], string(employee.StatusInactive), nil, nil, now, now, userIDs[2], "user3@example.com", "User Three", "inactive", now, now)
 
 	mock.ExpectQuery(query).
 		WithArgs("company-1", string(status), 3, 0).

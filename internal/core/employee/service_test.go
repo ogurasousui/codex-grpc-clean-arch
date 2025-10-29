@@ -27,6 +27,15 @@ func newFakeEmployeeRepo() *fakeEmployeeRepo {
 	return &fakeEmployeeRepo{employees: make(map[string]*Employee)}
 }
 
+const (
+	userID1 = "11111111-1111-1111-1111-111111111111"
+	userID2 = "22222222-2222-2222-2222-222222222222"
+	userID3 = "33333333-3333-3333-3333-333333333333"
+	userID4 = "44444444-4444-4444-4444-444444444444"
+	userID5 = "55555555-5555-5555-5555-555555555555"
+	userID6 = "66666666-6666-6666-6666-666666666666"
+)
+
 func (r *fakeEmployeeRepo) Create(_ context.Context, e *Employee) (*Employee, error) {
 	for _, existing := range r.employees {
 		if existing.CompanyID == e.CompanyID && existing.EmployeeCode == e.EmployeeCode {
@@ -124,10 +133,6 @@ func cloneEmployee(emp *Employee) *Employee {
 		return nil
 	}
 	copy := *emp
-	if emp.Email != nil {
-		email := *emp.Email
-		copy.Email = &email
-	}
 	if emp.HiredAt != nil {
 		hired := *emp.HiredAt
 		copy.HiredAt = &hired
@@ -135,6 +140,10 @@ func cloneEmployee(emp *Employee) *Employee {
 	if emp.TerminatedAt != nil {
 		terminated := *emp.TerminatedAt
 		copy.TerminatedAt = &terminated
+	}
+	if emp.User != nil {
+		userCopy := *emp.User
+		copy.User = &userCopy
 	}
 	return &copy
 }
@@ -146,15 +155,12 @@ func TestService_CreateEmployee_Success(t *testing.T) {
 	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	svc := NewService(repo, &stubClock{now: now}, nil)
 
-	email := "Example@Example.com"
 	hired := time.Date(2024, 12, 1, 0, 0, 0, 0, time.UTC)
 
 	created, err := svc.CreateEmployee(context.Background(), CreateEmployeeInput{
 		CompanyID:    " company-1 ",
 		EmployeeCode: " Emp-001 ",
-		Email:        &email,
-		LastName:     "  Yamada  ",
-		FirstName:    " Taro ",
+		UserID:       "  " + userID1 + "  ",
 		HiredAt:      &hired,
 	})
 	if err != nil {
@@ -167,11 +173,8 @@ func TestService_CreateEmployee_Success(t *testing.T) {
 	if created.EmployeeCode != "emp-001" {
 		t.Fatalf("expected normalized employee code, got %s", created.EmployeeCode)
 	}
-	if created.Email == nil || *created.Email != "example@example.com" {
-		t.Fatalf("expected normalized email, got %+v", created.Email)
-	}
-	if created.LastName != "Yamada" || created.FirstName != "Taro" {
-		t.Fatalf("expected trimmed names, got %s %s", created.LastName, created.FirstName)
+	if created.UserID != userID1 {
+		t.Fatalf("expected normalized user id, got %s", created.UserID)
 	}
 	if created.Status != StatusActive {
 		t.Fatalf("expected default status active, got %s", created.Status)
@@ -193,8 +196,7 @@ func TestService_CreateEmployee_DuplicateCode(t *testing.T) {
 	if _, err := svc.CreateEmployee(context.Background(), CreateEmployeeInput{
 		CompanyID:    "company-1",
 		EmployeeCode: "emp-1",
-		LastName:     "Test",
-		FirstName:    "User",
+		UserID:       userID1,
 	}); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -202,8 +204,7 @@ func TestService_CreateEmployee_DuplicateCode(t *testing.T) {
 	_, err := svc.CreateEmployee(context.Background(), CreateEmployeeInput{
 		CompanyID:    "company-1",
 		EmployeeCode: "EMP-1",
-		LastName:     "Another",
-		FirstName:    "User",
+		UserID:       userID2,
 	})
 	if !errors.Is(err, ErrEmployeeCodeAlreadyExists) {
 		t.Fatalf("expected ErrEmployeeCodeAlreadyExists, got %v", err)
@@ -222,13 +223,44 @@ func TestService_CreateEmployee_InvalidDateRange(t *testing.T) {
 	_, err := svc.CreateEmployee(context.Background(), CreateEmployeeInput{
 		CompanyID:    "company-1",
 		EmployeeCode: "emp-2",
-		LastName:     "Test",
-		FirstName:    "User",
+		UserID:       userID2,
 		HiredAt:      &hired,
 		TerminatedAt: &terminated,
 	})
 	if !errors.Is(err, ErrInvalidDateRange) {
 		t.Fatalf("expected ErrInvalidDateRange, got %v", err)
+	}
+}
+
+func TestService_CreateEmployee_InvalidUserID(t *testing.T) {
+	t.Parallel()
+
+	repo := newFakeEmployeeRepo()
+	svc := NewService(repo, &stubClock{now: time.Now().UTC()}, nil)
+
+	_, err := svc.CreateEmployee(context.Background(), CreateEmployeeInput{
+		CompanyID:    "company-1",
+		EmployeeCode: "emp-5",
+		UserID:       "  ",
+	})
+	if !errors.Is(err, ErrInvalidUserID) {
+		t.Fatalf("expected ErrInvalidUserID, got %v", err)
+	}
+}
+
+func TestService_CreateEmployee_InvalidUserIDFormat(t *testing.T) {
+	t.Parallel()
+
+	repo := newFakeEmployeeRepo()
+	svc := NewService(repo, &stubClock{now: time.Now().UTC()}, nil)
+
+	_, err := svc.CreateEmployee(context.Background(), CreateEmployeeInput{
+		CompanyID:    "company-1",
+		EmployeeCode: "emp-6",
+		UserID:       "not-a-uuid",
+	})
+	if !errors.Is(err, ErrInvalidUserID) {
+		t.Fatalf("expected ErrInvalidUserID for invalid format, got %v", err)
 	}
 }
 
@@ -242,8 +274,7 @@ func TestService_UpdateEmployee_Success(t *testing.T) {
 	created, err := svc.CreateEmployee(context.Background(), CreateEmployeeInput{
 		CompanyID:    "company-1",
 		EmployeeCode: "emp-3",
-		LastName:     "Suzuki",
-		FirstName:    "Ichiro",
+		UserID:       userID3,
 	})
 	if err != nil {
 		t.Fatalf("CreateEmployee returned error: %v", err)
@@ -252,9 +283,7 @@ func TestService_UpdateEmployee_Success(t *testing.T) {
 	clk.now = clk.now.Add(time.Hour)
 
 	newCode := "EMP-999"
-	newEmail := "ichiro+update@example.com"
-	newLast := "  Sato  "
-	newFirst := "  Hanako  "
+	newUser := "  " + userID5 + "  "
 	newStatus := StatusInactive
 	hired := time.Date(2024, 5, 1, 0, 0, 0, 0, time.UTC)
 	terminated := time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)
@@ -262,9 +291,7 @@ func TestService_UpdateEmployee_Success(t *testing.T) {
 	updated, err := svc.UpdateEmployee(context.Background(), UpdateEmployeeInput{
 		ID:              created.ID,
 		EmployeeCode:    &newCode,
-		Email:           &newEmail,
-		LastName:        &newLast,
-		FirstName:       &newFirst,
+		UserID:          &newUser,
 		Status:          &newStatus,
 		HiredAt:         &hired,
 		HiredAtSet:      true,
@@ -278,11 +305,8 @@ func TestService_UpdateEmployee_Success(t *testing.T) {
 	if updated.EmployeeCode != "emp-999" {
 		t.Fatalf("expected normalized code in update, got %s", updated.EmployeeCode)
 	}
-	if updated.Email == nil || *updated.Email != "ichiro+update@example.com" {
-		t.Fatalf("expected updated email, got %+v", updated.Email)
-	}
-	if updated.LastName != "Sato" || updated.FirstName != "Hanako" {
-		t.Fatalf("expected trimmed names, got %s %s", updated.LastName, updated.FirstName)
+	if updated.UserID != userID5 {
+		t.Fatalf("expected normalized user id, got %s", updated.UserID)
 	}
 	if updated.Status != StatusInactive {
 		t.Fatalf("expected status inactive, got %s", updated.Status)
@@ -307,8 +331,7 @@ func TestService_UpdateEmployee_InvalidStatus(t *testing.T) {
 	created, err := svc.CreateEmployee(context.Background(), CreateEmployeeInput{
 		CompanyID:    "company-1",
 		EmployeeCode: "emp-4",
-		LastName:     "Foo",
-		FirstName:    "Bar",
+		UserID:       userID4,
 	})
 	if err != nil {
 		t.Fatalf("CreateEmployee returned error: %v", err)
@@ -321,6 +344,28 @@ func TestService_UpdateEmployee_InvalidStatus(t *testing.T) {
 	}
 }
 
+func TestService_UpdateEmployee_InvalidUserID(t *testing.T) {
+	t.Parallel()
+
+	repo := newFakeEmployeeRepo()
+	svc := NewService(repo, &stubClock{now: time.Now().UTC()}, nil)
+
+	created, err := svc.CreateEmployee(context.Background(), CreateEmployeeInput{
+		CompanyID:    "company-1",
+		EmployeeCode: "emp-10",
+		UserID:       userID6,
+	})
+	if err != nil {
+		t.Fatalf("CreateEmployee returned error: %v", err)
+	}
+
+	empty := "  "
+	_, err = svc.UpdateEmployee(context.Background(), UpdateEmployeeInput{ID: created.ID, UserID: &empty})
+	if !errors.Is(err, ErrInvalidUserID) {
+		t.Fatalf("expected ErrInvalidUserID, got %v", err)
+	}
+}
+
 func TestService_ListEmployees_FilterAndPagination(t *testing.T) {
 	t.Parallel()
 
@@ -329,13 +374,13 @@ func TestService_ListEmployees_FilterAndPagination(t *testing.T) {
 
 	// seed
 	statuses := []Status{StatusActive, StatusInactive, StatusActive}
+	seedUserIDs := []string{userID1, userID2, userID3}
 	for i := 0; i < 3; i++ {
 		status := statuses[i]
 		if _, err := svc.CreateEmployee(context.Background(), CreateEmployeeInput{
 			CompanyID:    "company-1",
 			EmployeeCode: fmt.Sprintf("emp-%d", i),
-			LastName:     "Seed",
-			FirstName:    fmt.Sprintf("User%d", i),
+			UserID:       seedUserIDs[i],
 			Status:       &status,
 		}); err != nil {
 			t.Fatalf("unexpected seed error: %v", err)

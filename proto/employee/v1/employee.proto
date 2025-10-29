@@ -4,6 +4,7 @@ package employee.v1;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
+import "user/v1/user.proto";
 
 option go_package = "github.com/ogurasousui/codex-grpc-clean-arch/internal/adapters/grpc/gen/employee/v1;employeepb";
 
@@ -17,25 +18,35 @@ message Employee {
   string id = 1;
   string company_id = 2;
   string employee_code = 3;
-  google.protobuf.StringValue email = 4;
-  string last_name = 5;
-  string first_name = 6;
+  reserved 4, 5, 6;
+  reserved "email", "last_name", "first_name";
   EmployeeStatus status = 7;
   google.protobuf.StringValue hired_at = 8;
   google.protobuf.StringValue terminated_at = 9;
   google.protobuf.Timestamp created_at = 10;
   google.protobuf.Timestamp updated_at = 11;
+  string user_id = 12;
+  UserSummary user = 13;
+}
+
+message UserSummary {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  user.v1.UserStatus status = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
 }
 
 message CreateEmployeeRequest {
   string company_id = 1;
   string employee_code = 2;
-  google.protobuf.StringValue email = 3;
-  string last_name = 4;
-  string first_name = 5;
+  reserved 3, 4, 5;
+  reserved "email", "last_name", "first_name";
   EmployeeStatus status = 6;
   google.protobuf.StringValue hired_at = 7;
   google.protobuf.StringValue terminated_at = 8;
+  string user_id = 9;
 }
 
 message CreateEmployeeResponse {
@@ -65,12 +76,12 @@ message ListEmployeesResponse {
 message UpdateEmployeeRequest {
   string id = 1;
   google.protobuf.StringValue employee_code = 2;
-  google.protobuf.StringValue email = 3;
-  google.protobuf.StringValue last_name = 4;
-  google.protobuf.StringValue first_name = 5;
+  reserved 3, 4, 5;
+  reserved "email", "last_name", "first_name";
   EmployeeStatus status = 6;
   google.protobuf.StringValue hired_at = 7;
   google.protobuf.StringValue terminated_at = 8;
+  google.protobuf.StringValue user_id = 9;
 }
 
 message UpdateEmployeeResponse {

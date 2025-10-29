@@ -12,6 +12,12 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
+const (
+	handlerUserID1 = "11111111-1111-1111-1111-111111111111"
+	handlerUserID2 = "22222222-2222-2222-2222-222222222222"
+	handlerUserID3 = "33333333-3333-3333-3333-333333333333"
+)
+
 type stubEmployeeUseCase struct {
 	createInput employee.CreateEmployeeInput
 	createOut   *employee.Employee
@@ -67,11 +73,18 @@ func TestEmployeeGrpcHandler_CreateEmployee_Success(t *testing.T) {
 			ID:           "emp-1",
 			CompanyID:    "company-1",
 			EmployeeCode: "emp-001",
-			LastName:     "Yamada",
-			FirstName:    "Taro",
+			UserID:       handlerUserID1,
 			Status:       employee.StatusActive,
 			CreatedAt:    now,
 			UpdatedAt:    now,
+			User: &employee.UserSnapshot{
+				ID:        handlerUserID1,
+				Email:     "user@example.com",
+				Name:      "Taro Yamada",
+				Status:    "active",
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
 		},
 	}
 
@@ -79,9 +92,7 @@ func TestEmployeeGrpcHandler_CreateEmployee_Success(t *testing.T) {
 	resp, err := handler.CreateEmployee(context.Background(), &employeepb.CreateEmployeeRequest{
 		CompanyId:    "company-1",
 		EmployeeCode: "emp-001",
-		LastName:     "Yamada",
-		FirstName:    "Taro",
-		Email:        wrapperspb.String("user@example.com"),
+		UserId:       handlerUserID1,
 		HiredAt:      wrapperspb.String("2024-01-01"),
 	})
 	if err != nil {
@@ -91,8 +102,8 @@ func TestEmployeeGrpcHandler_CreateEmployee_Success(t *testing.T) {
 	if stub.createInput.CompanyID != "company-1" {
 		t.Errorf("expected company id to pass through, got %s", stub.createInput.CompanyID)
 	}
-	if stub.createInput.Email == nil || *stub.createInput.Email != "user@example.com" {
-		t.Errorf("expected email to be passed, got %+v", stub.createInput.Email)
+	if stub.createInput.UserID != handlerUserID1 {
+		t.Errorf("expected user id to be passed, got %s", stub.createInput.UserID)
 	}
 	if stub.createInput.HiredAt == nil || stub.createInput.HiredAt.Format("2006-01-02") != "2024-01-01" {
 		t.Errorf("expected hired date parsed, got %+v", stub.createInput.HiredAt)
@@ -100,6 +111,9 @@ func TestEmployeeGrpcHandler_CreateEmployee_Success(t *testing.T) {
 
 	if resp.GetEmployee().GetId() != "emp-1" {
 		t.Fatalf("expected response id 'emp-1', got %s", resp.GetEmployee().GetId())
+	}
+	if resp.GetEmployee().GetUser().GetEmail() != "user@example.com" {
+		t.Fatalf("expected embedded user email, got %s", resp.GetEmployee().GetUser().GetEmail())
 	}
 }
 
@@ -111,8 +125,7 @@ func TestEmployeeGrpcHandler_CreateEmployee_InvalidDateFormat(t *testing.T) {
 	_, err := handler.CreateEmployee(context.Background(), &employeepb.CreateEmployeeRequest{
 		CompanyId:    "company-1",
 		EmployeeCode: "emp-001",
-		LastName:     "Test",
-		FirstName:    "User",
+		UserId:       handlerUserID1,
 		HiredAt:      wrapperspb.String("2024/01/01"),
 	})
 	st, ok := status.FromError(err)
@@ -126,16 +139,30 @@ func TestEmployeeGrpcHandler_UpdateEmployee_SetsPointers(t *testing.T) {
 
 	now := time.Now().UTC()
 	stub := &stubEmployeeUseCase{
-		updateOut: &employee.Employee{ID: "emp-1", CompanyID: "company-1", EmployeeCode: "emp-001", LastName: "Yamada", FirstName: "Taro", Status: employee.StatusActive, CreatedAt: now, UpdatedAt: now},
+		updateOut: &employee.Employee{
+			ID:           "emp-1",
+			CompanyID:    "company-1",
+			EmployeeCode: "emp-001",
+			UserID:       handlerUserID1,
+			Status:       employee.StatusActive,
+			CreatedAt:    now,
+			UpdatedAt:    now,
+			User: &employee.UserSnapshot{
+				ID:        handlerUserID1,
+				Email:     "user@example.com",
+				Name:      "Updated User",
+				Status:    "active",
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
+		},
 	}
 	handler := NewEmployeeGrpcHandler(stub)
 
 	resp, err := handler.UpdateEmployee(context.Background(), &employeepb.UpdateEmployeeRequest{
 		Id:           "emp-1",
 		EmployeeCode: wrapperspb.String("emp-002"),
-		Email:        wrapperspb.String("update@example.com"),
-		LastName:     wrapperspb.String("Sato"),
-		FirstName:    wrapperspb.String("Hanako"),
+		UserId:       wrapperspb.String(handlerUserID2),
 		Status:       employeepb.EmployeeStatus_EMPLOYEE_STATUS_INACTIVE,
 		HiredAt:      wrapperspb.String(""),
 		TerminatedAt: wrapperspb.String("2024-02-01"),
@@ -146,6 +173,9 @@ func TestEmployeeGrpcHandler_UpdateEmployee_SetsPointers(t *testing.T) {
 
 	if stub.updateInput.EmployeeCode == nil || *stub.updateInput.EmployeeCode != "emp-002" {
 		t.Fatalf("expected employee code pointer to be set")
+	}
+	if stub.updateInput.UserID == nil || *stub.updateInput.UserID != handlerUserID2 {
+		t.Fatalf("expected user id pointer to be set")
 	}
 	if !stub.updateInput.HiredAtSet || stub.updateInput.HiredAt != nil {
 		t.Fatalf("expected hired_at to be explicitly cleared")
@@ -159,6 +189,9 @@ func TestEmployeeGrpcHandler_UpdateEmployee_SetsPointers(t *testing.T) {
 
 	if resp.GetEmployee().GetStatus() != employeepb.EmployeeStatus_EMPLOYEE_STATUS_ACTIVE {
 		t.Fatalf("response should echo domain status")
+	}
+	if resp.GetEmployee().GetUser().GetId() != handlerUserID1 {
+		t.Fatalf("expected user snapshot in response")
 	}
 }
 
@@ -208,7 +241,23 @@ func TestEmployeeGrpcHandler_ListEmployees_Success(t *testing.T) {
 	stub := &stubEmployeeUseCase{
 		listOut: &employee.ListEmployeesResult{
 			Employees: []*employee.Employee{
-				{ID: "emp-1", CompanyID: "company-1", EmployeeCode: "emp-1", LastName: "Yamada", FirstName: "Taro", Status: employee.StatusActive, CreatedAt: now, UpdatedAt: now},
+				{
+					ID:           "emp-1",
+					CompanyID:    "company-1",
+					EmployeeCode: "emp-1",
+					UserID:       handlerUserID1,
+					Status:       employee.StatusActive,
+					CreatedAt:    now,
+					UpdatedAt:    now,
+					User: &employee.UserSnapshot{
+						ID:        handlerUserID1,
+						Email:     "user@example.com",
+						Name:      "Test User",
+						Status:    "active",
+						CreatedAt: now,
+						UpdatedAt: now,
+					},
+				},
 			},
 			NextPageToken: "10",
 		},
