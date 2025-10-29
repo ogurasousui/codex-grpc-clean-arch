@@ -80,9 +80,7 @@ jobs:
 
       - name: Install Atlas CLI
         run: |
-          curl -sSf https://release.ariga.io/atlas/install.sh | sh
-          chmod +x atlas
-          sudo mv atlas /usr/local/bin/atlas
+          curl -sSf https://release.ariga.io/atlas/install.sh | sudo sh -s -- -b /usr/local/bin
 
       - name: Verify schema snapshot
         env:
