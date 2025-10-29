@@ -30,7 +30,7 @@
 4. 生成された `assets/migrations` の SQL をレビューし、テストで検証します。
 
 生成後に `make migrate-up` で反映し、アプリケーションテストを実施してください。マイグレーションが不要な小変更（例: 純粋なドキュメント更新）であっても `schema.sql` と実 DB の差分がないことを確認する運用を徹底します。
-CI では `atlas schema apply --dry-run` を実行し、乖離がないことを自動検証します。
+CI では `atlas schema diff --format '{{ len .Changes }}'` を利用し、差分が検出された場合はジョブを失敗させます。
 
 ## 運用チェックリスト
 - [ ] プルリクエストでは `schema.sql` と `assets/migrations` の両方をレビューし、差分が意図どおりか確認したか。

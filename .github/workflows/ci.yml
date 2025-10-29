@@ -88,11 +88,20 @@ jobs:
         env:
           DATABASE_URL: postgres://app_user:app_password@127.0.0.1:15432/app_db?sslmode=disable
         run: |
-          atlas schema apply \
-            --url "$DATABASE_URL" \
+          set -euo pipefail
+          diff_count=$(atlas schema diff \
+            --from "$DATABASE_URL" \
             --to file://assets/db/schema.sql \
             --dev-url docker://postgres/16/dev \
-            --dry-run
+            --format '{{ len .Changes }}')
+          if [ "$diff_count" -ne 0 ]; then
+            echo "::error::schema.sql is out of sync with the applied migrations. See the diff below." >&2
+            atlas schema diff \
+              --from "$DATABASE_URL" \
+              --to file://assets/db/schema.sql \
+              --dev-url docker://postgres/16/dev
+            exit 1
+          fi
 
       - name: Run integration tests
         env:

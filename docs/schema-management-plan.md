@@ -31,7 +31,7 @@
 ### フェーズ 3: 本導入と移行（2025-11-13 〜 2025-11-22）
 - 既存 SQL マイグレーションと `schema.sql` の整合を確認し、`schema.sql` を唯一のスキーマソースに切り替える。
 - PR テンプレートに「`schema.sql` 更新／差分確認」チェックボックスを追加し、レビュー観点を周知。
-- CI/CD（GitHub Actions 想定）へ `atlas schema apply --dry-run` と `atlas migrate diff` の自動検証ジョブを追加。
+  - CI/CD（GitHub Actions 想定）へ `atlas schema diff` と `atlas migrate diff` の自動検証ジョブを追加。
 - ステージング環境で `atlas schema apply --auto-approve` を試験実行し、バックアップおよびロールバック手順を確認。
 
 ### フェーズ 4: 運用定着とドキュメント整備（2025-11-25 〜 2025-12-03）
